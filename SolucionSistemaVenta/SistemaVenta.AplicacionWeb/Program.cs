@@ -1,9 +1,34 @@
+using SistemaVenta.AplicacionWeb.Utilidades.Automapper;
+using SistemaVenta.AplicacionWeb.Utilidades.Extensiones;
 using SistemaVenta.IOC;
+
+using DinkToPdf;
+using DinkToPdf.Contracts;
+
+using Microsoft.AspNetCore.Authentication.Cookies;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(option =>
+    {
+        option.LoginPath = "/Acceso/Login";
+        option.ExpireTimeSpan = TimeSpan.FromMinutes(20);
+    });
+
+// Ruta física de wwwroot para el almacenamiento local de archivos (sustituye a Firebase)
+builder.Configuration["RutaWebRoot"] = builder.Environment.WebRootPath;
+
 builder.Services.InyectarDependencia(builder.Configuration);
+
+builder.Services.AddAutoMapper(typeof(AutoMapperProfile));
+
+var context = new CustomAssemblyLoadContext();
+context.LoadUnmanagedLibrary(Path.Combine(AppContext.BaseDirectory, "Utilidades", "LibreriaPDF", "libwkhtmltox.dll"));
+builder.Services.AddSingleton(typeof(IConverter), new SynchronizedConverter(new PdfTools()));
 
 var app = builder.Build();
 
@@ -12,9 +37,12 @@ if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
 }
-app.UseRouting();
 
 app.UseStaticFiles();
+
+app.UseRouting();
+
+app.UseAuthentication();
 
 app.UseAuthorization();
 
@@ -22,8 +50,7 @@ app.MapStaticAssets();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=DashBoard}/{action=Index}/{id?}")
+    pattern: "{controller=Acceso}/{action=Login}/{id?}")
     .WithStaticAssets();
-
 
 app.Run();
