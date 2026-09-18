@@ -40,7 +40,7 @@ $(document).ready(function () {
              { "data": "idUsuario","visible":false,"searchable":false },
              {
                  "data": "urlFoto", render: function (data) {
-                     return `<img style="height:60px" src=${data} class="rounded mx-auto d-block"/>`
+                     return `<img style="height:60px" src="${data || "/img/undraw_profile.svg"}" class="rounded mx-auto d-block"/>`
                  }
              },
              { "data": "nombre" },
@@ -92,7 +92,7 @@ function mostrarModal(modelo = MODELO_BASE) {
     $("#cboRol").val(modelo.idRol == 0 ? $("#cboRol option:first").val() : modelo.idRol)
     $("#cboEstado").val(modelo.esActivo)
     $("#txtFoto").val("")
-    $("#imgUsuario").attr("src",modelo.urlFoto)
+    $("#imgUsuario").attr("src", modelo.urlFoto || "/img/undraw_profile.svg")
 
 
     $("#modalData").modal("show")

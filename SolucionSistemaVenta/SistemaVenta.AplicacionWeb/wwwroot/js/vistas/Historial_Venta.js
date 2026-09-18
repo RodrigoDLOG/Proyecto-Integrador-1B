@@ -28,6 +28,7 @@ $(document).ready(function () {
     $("#txtFechaInicio").datepicker({dateFormat : "dd/mm/yy"})
     $("#txtFechaFin").datepicker({ dateFormat: "dd/mm/yy" })
 
+    precargarUltimos30Dias()
 })
 
 $("#cboBuscarPor").change(function () {
@@ -136,3 +137,18 @@ $("#tbventa tbody").on("click", ".btn-info", function () {
     $("#modalData").modal("show");
 
 })
+
+// Regla del profesor (slide 15): al entrar, la pantalla muestra un listado.
+// Se precargan los ultimos 30 dias y se dispara la busqueda.
+function fechaDDMMYYYY(d) {
+    const dd = String(d.getDate()).padStart(2, "0")
+    const mm = String(d.getMonth() + 1).padStart(2, "0")
+    return `${dd}/${mm}/${d.getFullYear()}`
+}
+function precargarUltimos30Dias() {
+    const hoy = new Date()
+    const hace30 = new Date(); hace30.setDate(hoy.getDate() - 30)
+    $("#txtFechaInicio").val(fechaDDMMYYYY(hace30))
+    $("#txtFechaFin").val(fechaDDMMYYYY(hoy))
+    $("#btnBuscar").click()
+}

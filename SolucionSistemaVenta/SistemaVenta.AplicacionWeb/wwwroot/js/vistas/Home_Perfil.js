@@ -15,7 +15,7 @@ $(document).ready(function () {
             if (responseJson.estado) {
                 const d = responseJson.objeto
 
-                $("#imgFoto").attr("src", d.urlFoto)
+                $("#imgFoto").attr("src", d.urlFoto || "/img/undraw_profile.svg")
                 $("#txtNombre").val(d.nombre)
                 $("#txtCorreo").val(d.correo)
                 $("#txTelefono").val(d.telefono)

@@ -1,3 +1,18 @@
+// Regla del profesor (slide 15): al entrar, la pantalla muestra un listado.
+// Se precargan los ultimos 30 dias en los inputs y la tabla carga con ese rango.
+function fechaDDMMYYYY(d) {
+    const dd = String(d.getDate()).padStart(2, "0")
+    const mm = String(d.getMonth() + 1).padStart(2, "0")
+    return `${dd}/${mm}/${d.getFullYear()}`
+}
+function precargarUltimos30Dias() {
+    const hoy = new Date()
+    const hace30 = new Date(); hace30.setDate(hoy.getDate() - 30)
+    $("#txtFechaInicio").val(fechaDDMMYYYY(hace30))
+    $("#txtFechaFin").val(fechaDDMMYYYY(hoy))
+    return `/Reporte/ReporteVenta?fechaInicio=${$("#txtFechaInicio").val()}&fechaFin=${$("#txtFechaFin").val()}`
+}
+
 ﻿let tablaData;
 $(document).ready(function () {
 
@@ -9,7 +24,7 @@ $(document).ready(function () {
     tablaData = $('#tbdata').DataTable({
         responsive: true,
         "ajax": {
-            "url": '/Reporte/ReporteVenta?fechaInicio=01/01/1991&fechaFin=01/01/1991',
+            "url": precargarUltimos30Dias(),
             "type": "GET",
             "datatype": "json"
         },
