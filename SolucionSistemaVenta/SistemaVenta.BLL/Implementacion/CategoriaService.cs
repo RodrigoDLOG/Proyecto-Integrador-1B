@@ -7,10 +7,14 @@ namespace SistemaVenta.BLL.Implementacion
     public class CategoriaService : ICategoriaService
     {
         private readonly IGenericRepository<Categoria> _repositorio;
+        private readonly IGenericRepository<Producto> _repositorioProducto;
 
-        public CategoriaService(IGenericRepository<Categoria> repositorio)
+        // Pedimos DOS contratos: uno para categorias y otro para productos.
+        // Dependencia.cs entrega un GenericRepository<Producto> gracias al registro con <> vacio.
+        public CategoriaService(IGenericRepository<Categoria> repositorio, IGenericRepository<Producto> repositorioProducto)
         {
             _repositorio = repositorio;
+            _repositorioProducto = repositorioProducto;
         }
 
         public async Task<List<Categoria>> Lista()
@@ -64,6 +68,12 @@ namespace SistemaVenta.BLL.Implementacion
 
                 if (categoria_encontrada == null)
                     throw new TaskCanceledException("La categoria no existe");
+
+                // La tabla Producto tiene llave foranea hacia Categoria: SQL no deja borrar una
+                // categoria con productos. Se revisa antes para dar un mensaje claro.
+                IQueryable<Producto> productos = await _repositorioProducto.Consultar(p => p.IdCategoria == idCategoria);
+                if (productos.Any())
+                    throw new TaskCanceledException("No se puede eliminar: la categoria tiene productos asignados");
 
                 bool respuesta = await _repositorio.Eliminar(categoria_encontrada);
 
