@@ -77,6 +77,17 @@ public partial class DBVENTAContext
             entity.Property(e => e.TasaImpuesto)
                 .HasColumnType("decimal(5, 2)")
                 .HasColumnName("tasaImpuesto");
+
+            // Para mostrar la descripcion de cada clave (ej. "H87 - Pieza")
+            entity.HasOne(d => d.IdMedidaLocalNavigation).WithMany()
+                .HasForeignKey(d => d.IdMedidaLocal)
+                .HasConstraintName("FK_Producto_MedidaLocal");
+            entity.HasOne(d => d.ClaveUnidadNavigation).WithMany()
+                .HasForeignKey(d => d.ClaveUnidad)
+                .HasConstraintName("FK_Producto_ClaveUnidad");
+            entity.HasOne(d => d.ClaveProdServNavigation).WithMany()
+                .HasForeignKey(d => d.ClaveProdServ)
+                .HasConstraintName("FK_Producto_ClaveProdServ");
         });
 
         modelBuilder.Entity<Venta>(entity =>

@@ -81,6 +81,27 @@ namespace SistemaVenta.AplicacionWeb.Utilidades.Automapper
                 .ForMember(destino =>
                     destino.Precio,
                     opt => opt.MapFrom(origen => Convert.ToString(origen.Precio.Value, new CultureInfo("es-MX")))
+                )
+                // Version Mexico
+                .ForMember(destino =>
+                    destino.NombreMedidaLocal,
+                    opt => opt.MapFrom(origen => origen.IdMedidaLocalNavigation.Descripcion)
+                )
+                .ForMember(destino =>
+                    destino.NombreClaveUnidad,
+                    opt => opt.MapFrom(origen => origen.ClaveUnidadNavigation.Nombre)
+                )
+                .ForMember(destino =>
+                    destino.DescripcionClaveProdServ,
+                    opt => opt.MapFrom(origen => origen.ClaveProdServNavigation.Descripcion)
+                )
+                .ForMember(destino =>
+                    destino.Descuento,
+                    opt => opt.MapFrom(origen => Convert.ToString(origen.Descuento ?? 0, new CultureInfo("es-MX")))
+                )
+                .ForMember(destino =>
+                    destino.TasaImpuesto,
+                    opt => opt.MapFrom(origen => Convert.ToString(origen.TasaImpuesto ?? 0, new CultureInfo("es-MX")))
                 );
 
             CreateMap<VMProducto, Producto >()
@@ -95,8 +116,59 @@ namespace SistemaVenta.AplicacionWeb.Utilidades.Automapper
                 .ForMember(destino =>
                     destino.Precio,
                     opt => opt.MapFrom(origen => Convert.ToDecimal(origen.Precio, new CultureInfo("es-MX")))
+                )
+                // Version Mexico
+                .ForMember(destino => destino.IdMedidaLocalNavigation, opt => opt.Ignore())
+                .ForMember(destino => destino.ClaveUnidadNavigation, opt => opt.Ignore())
+                .ForMember(destino => destino.ClaveProdServNavigation, opt => opt.Ignore())
+                .ForMember(destino =>
+                    destino.Descuento,
+                    opt => opt.MapFrom(origen => Convert.ToDecimal(origen.Descuento, new CultureInfo("es-MX")))
+                )
+                .ForMember(destino =>
+                    destino.TasaImpuesto,
+                    opt => opt.MapFrom(origen => Convert.ToDecimal(origen.TasaImpuesto, new CultureInfo("es-MX")))
                 );
 
+            #endregion
+
+            #region Cliente
+            CreateMap<Cliente, VMCliente>()
+                .ForMember(destino =>
+                    destino.EsActivo,
+                    opt => opt.MapFrom(origen => origen.EsActivo == true ? 1 : 0)
+                );
+
+            CreateMap<VMCliente, Cliente>()
+                .ForMember(destino =>
+                    destino.EsActivo,
+                    opt => opt.MapFrom(origen => origen.EsActivo == 1 ? true : false)
+                );
+            #endregion
+
+            #region Catalogos SAT
+            // Todos los catalogos se mandan a la pantalla con la misma forma: Clave + Descripcion
+            CreateMap<CRegimenFiscalSat, VMCatalogo>()
+                .ForMember(destino => destino.Clave, opt => opt.MapFrom(origen => origen.CRegimenFiscal));
+            CreateMap<CUsoCfdiSat, VMCatalogo>()
+                .ForMember(destino => destino.Clave, opt => opt.MapFrom(origen => origen.CUsoCfdi));
+            CreateMap<CFormaPagoSat, VMCatalogo>()
+                .ForMember(destino => destino.Clave, opt => opt.MapFrom(origen => origen.CFormaPago));
+            CreateMap<CMetodoPagoSat, VMCatalogo>()
+                .ForMember(destino => destino.Clave, opt => opt.MapFrom(origen => origen.CMetodoPago));
+            CreateMap<CTipoDeComprobanteSat, VMCatalogo>()
+                .ForMember(destino => destino.Clave, opt => opt.MapFrom(origen => origen.CTipoDeComprobante));
+            CreateMap<CObjetoImpSat, VMCatalogo>()
+                .ForMember(destino => destino.Clave, opt => opt.MapFrom(origen => origen.CObjetoImpuesto));
+            CreateMap<CImpuestoSat, VMCatalogo>()
+                .ForMember(destino => destino.Clave, opt => opt.MapFrom(origen => origen.CImpuesto));
+            CreateMap<CClaveUnidadSat, VMCatalogo>()
+                .ForMember(destino => destino.Clave, opt => opt.MapFrom(origen => origen.CClaveUnidad))
+                .ForMember(destino => destino.Descripcion, opt => opt.MapFrom(origen => origen.Nombre));
+            CreateMap<CClaveProdServSat, VMCatalogo>()
+                .ForMember(destino => destino.Clave, opt => opt.MapFrom(origen => origen.CClaveProdServ));
+            CreateMap<CMedidaLocal, VMCatalogo>()
+                .ForMember(destino => destino.Clave, opt => opt.MapFrom(origen => origen.IdMedidaLocal.ToString()));
             #endregion
 
             #region TipoDocumentoVenta

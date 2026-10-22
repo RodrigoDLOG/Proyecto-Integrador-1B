@@ -4,24 +4,35 @@ $(document).ready(function () {
 
     $(".card-body").LoadingOverlay("show");
 
-    fetch("/Negocio/Obtener")
+    // Version Mexico: primero el catalogo de regimenes para el combo, despues los datos del negocio
+    fetch("/Catalogo/RegimenesFiscales")
+        .then(response => {
+            return response.ok ? response.json() : Promise.reject(response);
+        })
+        .then(responseJson => {
+            responseJson.forEach((item) => {
+                $("#cboRegimenFiscal").append(
+                    $("<option>").val(item.clave).text(`${item.clave} - ${item.descripcion}`)
+                )
+            })
+            return fetch("/Negocio/Obtener")
+        })
         .then(response => {
             $(".card-body").LoadingOverlay("hide");
             return response.ok ? response.json() : Promise.reject(response);
         })
         .then(responseJson => {
 
-            console.log(responseJson)
-
             if (responseJson.estado) {
                 const d = responseJson.objeto
 
-                $("#txtNumeroDocumento").val(d.numeroDocumento)
+                $("#txtRfc").val(d.rfc)
                 $("#txtRazonSocial").val(d.nombre)
                 $("#txtCorreo").val(d.correo)
                 $("#txtDireccion").val(d.direccion)
                 $("#txTelefono").val(d.telefono)
-                $("#txtImpuesto").val(d.porcentajeImpuesto)
+                $("#txtCodigoPostal").val(d.codigoPostal)
+                $("#cboRegimenFiscal").val(d.regimenFiscal)
                 $("#txtSimboloMoneda").val(d.simboloMoneda)
                 $("#imgLogo").attr("src", d.urlLogo)
 
@@ -49,12 +60,13 @@ $("#btnGuardarCambios").click(function () {
     }
 
     const modelo = {
-        numeroDocumento: $("#txtNumeroDocumento").val(),
+        rfc: $("#txtRfc").val().trim().toUpperCase(),
         nombre: $("#txtRazonSocial").val(),
         correo: $("#txtCorreo").val(),
         direccion: $("#txtDireccion").val(),
         telefono: $("#txTelefono").val(),
-        porcentajeImpuesto: $("#txtImpuesto").val(),
+        codigoPostal: $("#txtCodigoPostal").val(),
+        regimenFiscal: $("#cboRegimenFiscal").val(),
         simboloMoneda: $("#txtSimboloMoneda").val()
     }
 
@@ -68,7 +80,7 @@ $("#btnGuardarCambios").click(function () {
 
     $(".card-body").LoadingOverlay("show");
 
- 
+
     fetch("/Negocio/GuardarCambios", {
         method: "POST",
         body: formData
@@ -83,6 +95,7 @@ $("#btnGuardarCambios").click(function () {
                 const d = responseJson.objeto
 
                 $("#imgLogo").attr("src",d.urlLogo)
+                swal("Listo!", "Los datos del negocio fueron guardados", "success")
 
             } else {
                 swal("Los sentimos", responseJson.mensaje, "error")

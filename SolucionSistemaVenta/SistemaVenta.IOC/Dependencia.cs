@@ -36,6 +36,10 @@ namespace SistemaVenta.IOC
             services.AddScoped<IVentaService, VentaService>();
             services.AddScoped<IDashBoardService, DashBoardService>();
             services.AddScoped<IMenuService, MenuService>();
+
+            // Version Mexico
+            services.AddScoped<ICatalogoService, CatalogoService>();
+            services.AddScoped<IClienteService, ClienteService>();
         }
     }
 }

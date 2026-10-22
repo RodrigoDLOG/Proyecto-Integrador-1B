@@ -10,7 +10,16 @@ const MODELO_BASE = {
     urlImagen: "",
     precio:0,
     esActivo: 1,
-    
+    // Version Mexico: valores por defecto de un producto nuevo (pieza, IVA 16 %)
+    idMedidaLocal: 0,
+    claveUnidad: "H87",
+    nombreClaveUnidad: "Pieza",
+    claveProdServ: "",
+    descripcionClaveProdServ: "",
+    descuento: "0",
+    objetoImp: "02",
+    claveImpuesto: "002",
+    tasaImpuesto: "16",
 }
 
 
@@ -34,6 +43,15 @@ $(document).ready(function () {
             }
         })
 
+    // Version Mexico: catalogos chicos para los combos
+    llenarCombo("/Catalogo/MedidasLocales", "#cboMedidaLocal", false)
+    llenarCombo("/Catalogo/ObjetosImpuesto", "#cboObjetoImp", true)
+    llenarCombo("/Catalogo/Impuestos", "#cboImpuesto", true)
+
+    // Catalogos grandes del SAT: se buscan mientras se escribe
+    buscadorSat("#cboClaveUnidad", "/Catalogo/BuscarClavesUnidad", "Buscar unidad: pieza, H87, caja...")
+    buscadorSat("#cboClaveProdServ", "/Catalogo/BuscarClavesProdServ", "Buscar clave: monitor, teclado, 43211902...")
+
 
     tablaData = $('#tbdata').DataTable({
         responsive: true,
@@ -55,6 +73,8 @@ $(document).ready(function () {
             { "data": "nombreCategoria" },
             { "data": "stock" },
             { "data": "precio" },
+            { "data": "descuento" },
+            { "data": "claveProdServ" },
             {
                 "data": "esActivo", render: function (data) {
                     if (data == 1)
@@ -80,7 +100,7 @@ $(document).ready(function () {
                 title: '',
                 filename: 'Reporte Productos',
                 exportOptions: {
-                    columns: [2, 3, 4, 5, 6]
+                    columns: [2, 3, 4, 5, 6, 7, 8, 9]
                 }
             }, 'pageLength'
         ],
@@ -105,9 +125,76 @@ function mostrarModal(modelo = MODELO_BASE) {
     $("#txtImagen").val("")
     $("#imgProducto").attr("src", modelo.urlImagen)
 
+    // Version Mexico
+    $("#txtDescuento").val(modelo.descuento)
+    $("#cboMedidaLocal").val(modelo.idMedidaLocal == 0 ? $("#cboMedidaLocal option:first").val() : modelo.idMedidaLocal)
+    seleccionarSat("#cboClaveUnidad", modelo.claveUnidad, modelo.nombreClaveUnidad)
+    seleccionarSat("#cboClaveProdServ", modelo.claveProdServ, modelo.descripcionClaveProdServ)
+    $("#cboObjetoImp").val(modelo.objetoImp)
+    $("#cboImpuesto").val(modelo.claveImpuesto ?? "002")
+    $("#txtTasaImpuesto").val(modelo.tasaImpuesto)
+    habilitarImpuesto()
+
 
     $("#modalData").modal("show")
 }
+
+
+// Llena un <select> con un catalogo: "02 - Si objeto de impuesto"
+function llenarCombo(url, selector, mostrarClave) {
+    fetch(url)
+        .then(response => {
+            return response.ok ? response.json() : Promise.reject(response);
+        })
+        .then(responseJson => {
+            responseJson.forEach((item) => {
+                $(selector).append(
+                    $("<option>").val(item.clave).text(mostrarClave ? `${item.clave} - ${item.descripcion}` : item.descripcion)
+                )
+            })
+        })
+}
+
+// Select2 que busca en el servidor (igual que "Buscar Producto..." de Nueva Venta)
+function buscadorSat(selector, url, placeholder) {
+    $(selector).select2({
+        ajax: {
+            url: url,
+            dataType: 'json',
+            delay: 250,
+            data: function (params) {
+                return { busqueda: params.term };
+            },
+            processResults: function (data) {
+                return {
+                    results: data.map((item) => ({ id: item.clave, text: `${item.clave} - ${item.descripcion}` }))
+                };
+            }
+        },
+        dropdownParent: $("#modalData"),   // sin esto no se puede escribir dentro del modal
+        language: "es",
+        placeholder: placeholder,
+        minimumInputLength: 2
+    });
+}
+
+// Pone en el Select2 la clave que ya tiene el producto (al editar)
+function seleccionarSat(selector, clave, descripcion) {
+    $(selector).empty()
+    if (clave) {
+        $(selector).append(new Option(`${clave} - ${descripcion ?? ""}`, clave, true, true))
+    }
+    $(selector).trigger("change")
+}
+
+// 01 = No objeto de impuesto: el producto no lleva impuesto ni tasa
+function habilitarImpuesto() {
+    const sinImpuesto = $("#cboObjetoImp").val() == "01"
+    $("#cboImpuesto").prop("disabled", sinImpuesto)
+    $("#txtTasaImpuesto").prop("disabled", sinImpuesto)
+}
+
+$("#cboObjetoImp").change(habilitarImpuesto)
 
 
 
@@ -129,6 +216,15 @@ $("#btnGuardar").click(function () {
         return;
     }
 
+    if (!$("#cboClaveUnidad").val()) {
+        toastr.warning("", "Seleccione la unidad de medida del SAT")
+        return;
+    }
+    if (!$("#cboClaveProdServ").val()) {
+        toastr.warning("", "Seleccione la clave de producto del SAT")
+        return;
+    }
+
 
     const modelo = structuredClone(MODELO_BASE);
     modelo["idProducto"] = parseInt($("#txtId").val())
@@ -139,6 +235,14 @@ $("#btnGuardar").click(function () {
     modelo["stock"] = $("#txtStock").val()
     modelo["precio"] = $("#txtPrecio").val()
     modelo["esActivo"] = $("#cboEstado").val()
+    // Version Mexico
+    modelo["descuento"] = $("#txtDescuento").val()
+    modelo["idMedidaLocal"] = parseInt($("#cboMedidaLocal").val())
+    modelo["claveUnidad"] = $("#cboClaveUnidad").val()
+    modelo["claveProdServ"] = $("#cboClaveProdServ").val()
+    modelo["objetoImp"] = $("#cboObjetoImp").val()
+    modelo["claveImpuesto"] = $("#cboImpuesto").val()
+    modelo["tasaImpuesto"] = $("#txtTasaImpuesto").val() || "0"
 
     const inputFoto = document.getElementById("txtImagen")
 

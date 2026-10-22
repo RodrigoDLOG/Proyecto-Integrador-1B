@@ -43,4 +43,10 @@ public partial class Producto
     public decimal? TasaImpuesto { get; set; }
 
     public virtual Categoria? IdCategoriaNavigation { get; set; }
+
+    public virtual CMedidaLocal? IdMedidaLocalNavigation { get; set; }
+
+    public virtual CClaveUnidadSat? ClaveUnidadNavigation { get; set; }
+
+    public virtual CClaveProdServSat? ClaveProdServNavigation { get; set; }
 }
