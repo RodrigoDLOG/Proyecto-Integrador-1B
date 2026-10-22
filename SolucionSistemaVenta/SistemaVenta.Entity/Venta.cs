@@ -25,6 +25,11 @@ public partial class Venta
 
     public DateTime? FechaRegistro { get; set; }
 
+    // Version Mexico (diapositivas 26 y 27)
+    public int? IdCliente { get; set; }
+
+    public decimal? DescuentoTotal { get; set; }
+
     public virtual ICollection<DetalleVenta> DetalleVenta { get; set; } = new List<DetalleVenta>();
 
     public virtual TipoDocumentoVenta? IdTipoDocumentoVentaNavigation { get; set; }

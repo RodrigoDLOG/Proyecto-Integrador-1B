@@ -27,5 +27,20 @@ public partial class Producto
 
     public DateTime? FechaRegistro { get; set; }
 
+    // Version Mexico (diapositiva 22). Precio = Precio Unitario sin IVA.
+    public int? IdMedidaLocal { get; set; }
+
+    public string? ClaveUnidad { get; set; }
+
+    public string? ClaveProdServ { get; set; }
+
+    public decimal? Descuento { get; set; }
+
+    public string? ObjetoImp { get; set; }
+
+    public string? ClaveImpuesto { get; set; }
+
+    public decimal? TasaImpuesto { get; set; }
+
     public virtual Categoria? IdCategoriaNavigation { get; set; }
 }

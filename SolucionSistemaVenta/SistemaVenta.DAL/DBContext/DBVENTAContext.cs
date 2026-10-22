@@ -358,7 +358,7 @@ public partial class DBVENTAContext : DbContext
 
             entity.Property(e => e.IdVenta).HasColumnName("idVenta");
             entity.Property(e => e.DocumentoCliente)
-                .HasMaxLength(10)
+                .HasMaxLength(13)
                 .IsUnicode(false)
                 .HasColumnName("documentoCliente");
             entity.Property(e => e.FechaRegistro)
@@ -371,7 +371,7 @@ public partial class DBVENTAContext : DbContext
                 .HasColumnType("decimal(10, 2)")
                 .HasColumnName("impuestoTotal");
             entity.Property(e => e.NombreCliente)
-                .HasMaxLength(20)
+                .HasMaxLength(80)
                 .IsUnicode(false)
                 .HasColumnName("nombreCliente");
             entity.Property(e => e.NumeroVenta)

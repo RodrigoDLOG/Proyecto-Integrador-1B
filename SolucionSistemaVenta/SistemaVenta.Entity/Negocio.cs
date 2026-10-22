@@ -24,4 +24,11 @@ public partial class Negocio
     public decimal? PorcentajeImpuesto { get; set; }
 
     public string? SimboloMoneda { get; set; }
+
+    // Version Mexico (diapositiva 18)
+    public string? Rfc { get; set; }
+
+    public string? CodigoPostal { get; set; }
+
+    public string? RegimenFiscal { get; set; }
 }

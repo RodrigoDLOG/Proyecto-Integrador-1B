@@ -12,7 +12,9 @@ GO
 
 -- ---------------------------------------------------------------------
 -- LIMPIEZA (hijos primero, padres despues)
+-- Si ya se aplico 05_version_mexico.sql, hay que volver a correrlo despues de este.
 -- ---------------------------------------------------------------------
+IF OBJECT_ID('Factura') IS NOT NULL DELETE FROM Factura;
 DELETE FROM DetalleVenta;
 DELETE FROM Venta;
 DELETE FROM Producto;
