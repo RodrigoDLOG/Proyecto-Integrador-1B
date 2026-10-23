@@ -42,6 +42,10 @@ $(document).ready(function () {
 
             }
         })
+        .catch(() => {
+            $(".card-body").LoadingOverlay("hide");
+            swal("Los sentimos", "No se pudieron cargar los datos del negocio", "error")
+        })
 
 
 })

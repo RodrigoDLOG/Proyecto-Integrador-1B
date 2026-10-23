@@ -86,19 +86,23 @@ function formatoResultados(data) {
     if (data.loading)
         return data.text;
 
+    // Se arma con .text() y .attr(): una marca o descripcion con <script> se muestra como texto
     var contenedor = $(
         `<table width="100%">
             <tr>
                 <td style="width:60px">
-                    <img style="height:60px;width:60px;margin-right:10px" src="${data.urlImagen}"/>
+                    <img style="height:60px;width:60px;margin-right:10px"/>
                 </td>
                 <td>
-                    <p style="font-weight: bolder;margin:2px">${data.marca}</p>
-                    <p style="margin:2px">${data.text}</p>
+                    <p class="marca" style="font-weight: bolder;margin:2px"></p>
+                    <p class="descripcion" style="margin:2px"></p>
                 </td>
             </tr>
          </table>`
     );
+    contenedor.find("img").attr("src", data.urlImagen)
+    contenedor.find(".marca").text(data.marca)
+    contenedor.find(".descripcion").text(data.text)
 
     return contenedor;
 }
@@ -252,16 +256,18 @@ $("#cboBuscarProducto").on("select2:select", function (e) {
 
 // Mismo calculo que CalculoVenta.cs (diapositiva 27); aqui es solo para mostrarlo.
 // Ejemplo: 1 x 5000 con 15 % -> descuento 750, subtotal 4250, IVA 680, total 4930
-function redondear(valor) {
-    return Math.round((valor + Number.EPSILON) * 100) / 100
-}
-
+// Se hace en CENTAVOS enteros: con decimales de JavaScript un medio centavo (x.xx5) a veces
+// se redondea hacia abajo y la pantalla diferiria un centavo de lo que guarda el servidor.
 function calcularProducto(item) {
-    const importe = redondear(item.cantidad * item.precio)
-    item.descuento = redondear(importe * item.porcentajeDescuento / 100)
-    item.subTotal = redondear(importe - item.descuento)
-    item.impuesto = redondear(item.subTotal * item.tasaImpuesto / 100)
-    item.total = redondear(item.subTotal + item.impuesto)
+    const importeC = item.cantidad * Math.round(item.precio * 100)
+    const descuentoC = Math.round(importeC * Math.round(item.porcentajeDescuento * 100) / 10000)
+    const subTotalC = importeC - descuentoC
+    const impuestoC = Math.round(subTotalC * Math.round(item.tasaImpuesto * 100) / 10000)
+
+    item.descuento = descuentoC / 100
+    item.subTotal = subTotalC / 100
+    item.impuesto = impuestoC / 100
+    item.total = (subTotalC + impuestoC) / 100
 }
 
 function mostrarProducto_Precios() {
@@ -349,7 +355,7 @@ $("#btnTerminarVenta").click(function () {
                 cargarClientePorRfc(RFC_PUBLICO_GENERAL)
                 $("#cboTipoDocumentoVenta").val($("#cboTipoDocumentoVenta option:first").val())
 
-                swal("Registrado!", `Numero Venta : ${responseJson.objeto.numeroVenta}`, "success")
+                swal("Registrado!", `Numero Venta : ${responseJson.objeto.numeroVenta}\nTotal : ${SimboloMoneda} ${responseJson.objeto.total}`, "success")
             } else {
                 swal("Lo sentimos!", responseJson.mensaje || "No se pudo registrar la venta", "error")
             }

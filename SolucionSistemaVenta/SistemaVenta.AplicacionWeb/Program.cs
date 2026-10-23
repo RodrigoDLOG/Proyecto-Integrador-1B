@@ -1,5 +1,6 @@
 using SistemaVenta.AplicacionWeb.Utilidades.Automapper;
 using SistemaVenta.AplicacionWeb.Utilidades.Extensiones;
+using SistemaVenta.AplicacionWeb.Utilidades.Permisos;
 using SistemaVenta.IOC;
 
 using DinkToPdf;
@@ -10,7 +11,8 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllersWithViews();
+// PermisoMenuFilter: cada accion revisa en RolMenu que el rol del usuario tenga esa opcion
+builder.Services.AddControllersWithViews(opciones => opciones.Filters.Add<PermisoMenuFilter>());
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(option =>

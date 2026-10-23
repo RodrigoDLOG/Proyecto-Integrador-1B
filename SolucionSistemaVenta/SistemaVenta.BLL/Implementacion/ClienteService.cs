@@ -62,8 +62,10 @@ namespace SistemaVenta.BLL.Implementacion
                 if (cliente_encontrado == null)
                     throw new TaskCanceledException("El cliente no existe");
 
-                if (cliente_encontrado.Rfc == ValidacionesSat.RfcPublicoGeneral && entidad.Rfc != ValidacionesSat.RfcPublicoGeneral)
-                    throw new TaskCanceledException("No se puede cambiar el RFC de Venta a Publico En General");
+                // Es el cliente por defecto de Nueva Venta: si se desactivara, no se podria vender sin elegir cliente
+                if (cliente_encontrado.Rfc == ValidacionesSat.RfcPublicoGeneral &&
+                    (entidad.Rfc != ValidacionesSat.RfcPublicoGeneral || entidad.EsActivo != true))
+                    throw new TaskCanceledException("Venta a Publico En General no puede cambiar de RFC ni desactivarse");
 
                 cliente_encontrado.Nombre = entidad.Nombre;
                 cliente_encontrado.Correo = entidad.Correo;

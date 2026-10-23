@@ -104,7 +104,7 @@ namespace SistemaVenta.AplicacionWeb.Utilidades.Automapper
                 )
                 .ForMember(destino =>
                     destino.Precio,
-                    opt => opt.MapFrom(origen => Convert.ToDecimal(origen.Precio, new CultureInfo("es-MX")))
+                    opt => opt.MapFrom(origen => LeerDecimal(origen.Precio))
                 )
                 // Version Mexico
                 .ForMember(destino => destino.IdMedidaLocalNavigation, opt => opt.Ignore())
@@ -112,11 +112,11 @@ namespace SistemaVenta.AplicacionWeb.Utilidades.Automapper
                 .ForMember(destino => destino.ClaveProdServNavigation, opt => opt.Ignore())
                 .ForMember(destino =>
                     destino.Descuento,
-                    opt => opt.MapFrom(origen => Convert.ToDecimal(origen.Descuento, new CultureInfo("es-MX")))
+                    opt => opt.MapFrom(origen => LeerDecimal(origen.Descuento))
                 )
                 .ForMember(destino =>
                     destino.TasaImpuesto,
-                    opt => opt.MapFrom(origen => Convert.ToDecimal(origen.TasaImpuesto, new CultureInfo("es-MX")))
+                    opt => opt.MapFrom(origen => LeerDecimal(origen.TasaImpuesto))
                 );
 
             #endregion
@@ -305,6 +305,14 @@ namespace SistemaVenta.AplicacionWeb.Utilidades.Automapper
                   destino.Total,
                   opt => opt.MapFrom(origen => Convert.ToString(origen.Total.Value, new CultureInfo("es-MX")))
               )
+                .ForMember(destino =>
+                  destino.Descuento,
+                  opt => opt.MapFrom(origen => Convert.ToString(origen.Descuento ?? 0, new CultureInfo("es-MX")))
+              )
+                .ForMember(destino =>
+                  destino.Impuesto,
+                  opt => opt.MapFrom(origen => Convert.ToString(origen.Impuesto ?? 0, new CultureInfo("es-MX")))
+              )
             ;
 
             #endregion
@@ -317,6 +325,13 @@ namespace SistemaVenta.AplicacionWeb.Utilidades.Automapper
               );
             #endregion
 
+        }
+
+        // Solo acepta punto decimal ("7.5"). Con Convert.ToDecimal y es-MX la coma es separador de
+        // miles y se ignora: "7,5" % se guardaba como 75 %. Asi "7,5" marca error en vez de guardarse mal.
+        private static decimal LeerDecimal(string? texto)
+        {
+            return decimal.Parse(texto ?? "0", NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture);
         }
 
     }

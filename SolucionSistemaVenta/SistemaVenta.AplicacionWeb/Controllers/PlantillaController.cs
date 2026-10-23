@@ -33,7 +33,12 @@ namespace SistemaVenta.AplicacionWeb.Controllers
 
         public async Task<IActionResult> PDFVenta(string numeroVenta)
         {
-            
+            // Esta pagina la pide DinkToPdf desde el mismo servidor (sin la cookie del usuario).
+            // Fuera de eso, solo con sesion: trae nombre, RFC e importes del cliente.
+            bool desdeElServidor = System.Net.IPAddress.IsLoopback(HttpContext.Connection.RemoteIpAddress!);
+            if (User.Identity?.IsAuthenticated != true && !desdeElServidor)
+                return Unauthorized();
+
             VMVenta vmVenta = _mapper.Map<VMVenta>(await _ventaServicio.Detalle(numeroVenta));
             VMNegocio vmNegocio = _mapper.Map<VMNegocio>(await _negocioServicio.Obtener());
 

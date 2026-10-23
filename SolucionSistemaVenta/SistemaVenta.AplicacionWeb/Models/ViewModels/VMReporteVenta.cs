@@ -14,5 +14,8 @@
         public int Cantidad { get; set; }
         public string? Precio { get; set; }
         public string? Total { get; set; }
+        // Version Mexico: descuento e impuesto del producto
+        public string? Descuento { get; set; }
+        public string? Impuesto { get; set; }
     }
 }

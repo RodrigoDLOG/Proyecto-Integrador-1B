@@ -43,10 +43,10 @@ $(document).ready(function () {
                      return `<img style="height:60px" src="${data || "/img/undraw_profile.svg"}" class="rounded mx-auto d-block"/>`
                  }
              },
-             { "data": "nombre" },
-             { "data": "correo" },
-             { "data": "telefono" },
-             { "data": "nombreRol" },
+             { "data": "nombre", render: $.fn.dataTable.render.text() },
+             { "data": "correo", render: $.fn.dataTable.render.text() },
+             { "data": "telefono", render: $.fn.dataTable.render.text() },
+             { "data": "nombreRol", render: $.fn.dataTable.render.text() },
              {
                  "data": "esActivo", render: function (data) {
                      if (data == 1)
@@ -92,7 +92,7 @@ function mostrarModal(modelo = MODELO_BASE) {
     $("#cboRol").val(modelo.idRol == 0 ? $("#cboRol option:first").val() : modelo.idRol)
     $("#cboEstado").val(modelo.esActivo)
     $("#txtFoto").val("")
-    $("#imgUsuario").attr("src", modelo.urlFoto || "/img/undraw_profile.svg")
+    $("#imgUsuario").attr("src", modelo.urlFoto || "/img/undraw_profile.svg")    
 
 
     $("#modalData").modal("show")

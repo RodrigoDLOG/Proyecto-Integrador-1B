@@ -26,8 +26,9 @@ $(document).ready(function () {
                     $("<option>").val(item.clave).text(`${item.clave} - ${item.descripcion}`)
                 )
             })
-            cargarTabla()
         })
+        .catch(() => toastr.error("", "No se pudo cargar el catalogo de regimenes fiscales"))
+        .finally(() => cargarTabla())
 
 })
 
@@ -43,13 +44,14 @@ function cargarTabla() {
         },
         "columns": [
             { "data": "idCliente", "visible": false, "searchable": false },
-            { "data": "rfc" },
-            { "data": "nombre" },
-            { "data": "correo" },
-            { "data": "domicilioFiscalReceptor" },
+            // render.text(): el texto se muestra como texto, no como HTML (evita que un nombre con <script> se ejecute)
+            { "data": "rfc", render: $.fn.dataTable.render.text() },
+            { "data": "nombre", render: $.fn.dataTable.render.text() },
+            { "data": "correo", render: $.fn.dataTable.render.text() },
+            { "data": "domicilioFiscalReceptor", render: $.fn.dataTable.render.text() },
             {
                 "data": "regimenFiscalReceptor", render: function (data) {
-                    return `${data} - ${regimenes[data] ?? ""}`
+                    return $("<span>").text(`${data} - ${regimenes[data] ?? ""}`).html()
                 }
             },
             {

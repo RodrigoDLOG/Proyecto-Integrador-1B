@@ -67,14 +67,15 @@ $(document).ready(function () {
                     return `<img style="height:60px" src=${data} class="rounded mx-auto d-block"/>`
                 }
             },
-            { "data": "codigoBarra" },
-            { "data": "marca" },
-            { "data": "descripcion" },
-            { "data": "nombreCategoria" },
+            // render.text(): el texto se muestra como texto, no como HTML (evita que un nombre con <script> se ejecute)
+            { "data": "codigoBarra", render: $.fn.dataTable.render.text() },
+            { "data": "marca", render: $.fn.dataTable.render.text() },
+            { "data": "descripcion", render: $.fn.dataTable.render.text() },
+            { "data": "nombreCategoria", render: $.fn.dataTable.render.text() },
             { "data": "stock" },
             { "data": "precio" },
             { "data": "descuento" },
-            { "data": "claveProdServ" },
+            { "data": "claveProdServ", render: $.fn.dataTable.render.text() },
             {
                 "data": "esActivo", render: function (data) {
                     if (data == 1)
@@ -196,6 +197,11 @@ function habilitarImpuesto() {
 
 $("#cboObjetoImp").change(habilitarImpuesto)
 
+// Con jQuery 3.6 Select2 no pone el cursor en su buscador al abrirse (igual que en Nueva Venta)
+$(document).on("select2:open", function () {
+    document.querySelector(".select2-container--open .select2-search__field")?.focus();
+})
+
 
 
 $("#btnNuevo").click(function () {
@@ -214,6 +220,18 @@ $("#btnGuardar").click(function () {
         toastr.warning("", mensaje)
         $(`input[name="${inputs_sin_valor[0].name}"]`).focus()
         return;
+    }
+
+    // Numeros con punto decimal (7.5). Con coma, "7,5" se leeria como 75.
+    const numeros = [["#txtPrecio", "Precio Unitario"], ["#txtDescuento", "Descuento"], ["#txtTasaImpuesto", "Tasa"]]
+    for (const [id, nombre] of numeros) {
+        if ($(id).prop("disabled")) continue
+        $(id).val($(id).val().trim())
+        if (!/^\d+(\.\d{1,2})?$/.test($(id).val())) {
+            toastr.warning("", `${nombre}: escriba un numero con punto decimal, por ejemplo 7.5`)
+            $(id).focus()
+            return;
+        }
     }
 
     if (!$("#cboClaveUnidad").val()) {

@@ -94,9 +94,15 @@ namespace SistemaVenta.BLL.Implementacion
             return query.ToList();
         }
 
+        private static string Recortar(string? busqueda)
+        {
+            string limpio = (busqueda ?? "").Trim();
+            return limpio.Length > 60 ? limpio.Substring(0, 60) : limpio;
+        }
+
         public async Task<List<CClaveUnidadSat>> BuscarClavesUnidad(string busqueda)
         {
-            busqueda = (busqueda ?? "").Trim();
+            busqueda = Recortar(busqueda);
             IQueryable<CClaveUnidadSat> query = await _repositorioClaveUnidad.Consultar(u =>
                 u.CClaveUnidad.StartsWith(busqueda) || u.Nombre!.Contains(busqueda));
 
@@ -111,7 +117,8 @@ namespace SistemaVenta.BLL.Implementacion
         // o en las palabras similares. Tambien se puede buscar por la clave ("4321").
         public async Task<List<CClaveProdServSat>> BuscarClavesProdServ(string busqueda)
         {
-            busqueda = (busqueda ?? "").Trim();
+            // Limite para que una busqueda enorme no ponga lenta la base (cada palabra es otro filtro)
+            busqueda = Recortar(busqueda);
             IQueryable<CClaveProdServSat> query = await _repositorioClaveProdServ.Consultar();
 
             if (busqueda.All(char.IsDigit))
@@ -120,7 +127,7 @@ namespace SistemaVenta.BLL.Implementacion
             }
             else
             {
-                foreach (string palabra in busqueda.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+                foreach (string palabra in busqueda.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(5))
                     query = query.Where(p => p.Descripcion!.Contains(palabra) || p.PalabrasSimilares!.Contains(palabra));
             }
 

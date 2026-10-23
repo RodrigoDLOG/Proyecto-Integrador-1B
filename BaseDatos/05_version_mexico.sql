@@ -23,12 +23,6 @@ INSERT INTO c_Medida_Local(descripcion, esActivo) VALUES
 GO
 
 --________________________________ Negocio (diapositiva 18) ________________________________
--- Quitar Numero de Documento y % Impuesto (el impuesto ahora va en cada producto)
-IF COL_LENGTH('Negocio', 'numeroDocumento') IS NOT NULL
-    ALTER TABLE Negocio DROP COLUMN numeroDocumento;
-IF COL_LENGTH('Negocio', 'porcentajeImpuesto') IS NOT NULL
-    ALTER TABLE Negocio DROP COLUMN porcentajeImpuesto;
-GO
 -- Agregar RFC, Codigo Postal y Regimen Fiscal
 IF COL_LENGTH('Negocio', 'rfc') IS NULL
     ALTER TABLE Negocio ADD rfc VARCHAR(13);
@@ -38,12 +32,23 @@ IF COL_LENGTH('Negocio', 'regimenFiscal') IS NULL
     ALTER TABLE Negocio ADD regimenFiscal VARCHAR(3)
         CONSTRAINT FK_Negocio_RegimenFiscal REFERENCES c_RegimenFiscal_SAT(c_RegimenFiscal);
 GO
+-- Si el negocio ya tenia capturado su RFC en "Numero de Documento", se conserva antes de borrar
+-- esa columna. Va con EXEC porque al volver a correr el script la columna ya no existe.
+IF COL_LENGTH('Negocio', 'numeroDocumento') IS NOT NULL
+    EXEC('UPDATE Negocio SET rfc = COALESCE(rfc, NULLIF(LEFT(LTRIM(RTRIM(numeroDocumento)), 13), '''')) WHERE idNegocio = 1');
+GO
 -- 601 = General de Ley Personas Morales (RFC de 12 caracteres)
 UPDATE Negocio SET
     rfc           = COALESCE(rfc, 'MTI260101AB1'),
     codigoPostal  = COALESCE(codigoPostal, '64000'),
     regimenFiscal = COALESCE(regimenFiscal, '601')
 WHERE idNegocio = 1;
+GO
+-- Quitar Numero de Documento y % Impuesto (el impuesto ahora va en cada producto)
+IF COL_LENGTH('Negocio', 'numeroDocumento') IS NOT NULL
+    ALTER TABLE Negocio DROP COLUMN numeroDocumento;
+IF COL_LENGTH('Negocio', 'porcentajeImpuesto') IS NOT NULL
+    ALTER TABLE Negocio DROP COLUMN porcentajeImpuesto;
 GO
 
 --________________________________ Cliente (diapositivas 20 y 21) ________________________________
@@ -61,10 +66,11 @@ CREATE TABLE Cliente (
     CONSTRAINT FK_Cliente_RegimenFiscal FOREIGN KEY (regimenFiscalReceptor) REFERENCES c_RegimenFiscal_SAT(c_RegimenFiscal)
 );
 GO
--- Diapositiva 27: sin cliente definido es "Venta a Publico En General" (RFC generico del SAT, regimen 616)
+-- Diapositiva 27: sin cliente definido es "Venta a Publico En General" (RFC generico del SAT, regimen 616).
+-- La u con acento va como NCHAR(250) para que el script no dependa de como se abra el archivo.
 IF NOT EXISTS (SELECT 1 FROM Cliente WHERE rfc = 'XAXX010101000')
 INSERT INTO Cliente(nombre, correo, rfc, domicilioFiscalReceptor, regimenFiscalReceptor, esActivo)
-VALUES (N'Venta a Público En General', '', 'XAXX010101000', '64000', '616', 1);
+VALUES (N'Venta a P' + NCHAR(250) + N'blico En General', '', 'XAXX010101000', '64000', '616', 1);
 GO
 
 --________________________________ Producto (diapositivas 22 a 25) ________________________________
@@ -89,7 +95,9 @@ IF COL_LENGTH('Producto', 'claveImpuesto') IS NULL
 IF COL_LENGTH('Producto', 'tasaImpuesto') IS NULL
     ALTER TABLE Producto ADD tasaImpuesto DECIMAL(5,2);
 GO
--- Los 10 productos de ejemplo: Pieza / H87, IVA 16 %, objeto de impuesto 02
+-- Los 10 productos de ejemplo: Pieza / H87, IVA 16 %, objeto de impuesto 02.
+-- Solo los que aun no tienen clave SAT: al volver a correr el script no se pisa lo editado en pantalla.
+-- El monitor de 32" lleva 15 % de descuento, el ejemplo de la diapositiva 27.
 UPDATE Producto SET
     idMedidaLocal = (SELECT idMedidaLocal FROM c_Medida_Local WHERE descripcion = 'Pieza'),
     claveUnidad   = 'H87',
@@ -101,14 +109,11 @@ UPDATE Producto SET
                         WHEN descripcion LIKE 'Microfono%'   THEN '52161520'
                         ELSE '01010101'
                     END,
-    descuento     = 0,
+    descuento     = CASE WHEN codigoBarra = '707070' THEN 15 ELSE 0 END,
     objetoImp     = '02',
     claveImpuesto = '002',
     tasaImpuesto  = 16
 WHERE claveProdServ IS NULL;
-GO
--- El ejemplo de la diapositiva 27 (monitor de 32" con 15 % de descuento)
-UPDATE Producto SET descuento = 15 WHERE codigoBarra = '707070' AND descuento = 0;
 GO
 
 --________________________________ Venta (diapositivas 26 y 27) ________________________________
@@ -152,24 +157,38 @@ IF COL_LENGTH('DetalleVenta', 'claveImpuesto') IS NULL
     ALTER TABLE DetalleVenta ADD claveImpuesto VARCHAR(3);
 GO
 
--- Ventas hechas antes de la Version Mexico: ahi el precio ya traia el IVA incluido.
--- Se completan sus columnas nuevas con ese mismo criterio para que Historial y Reporte las muestren.
+-- Ventas hechas antes de la Version Mexico (no tienen idCliente): ahi el precio traia el IVA
+-- incluido y total = cantidad * precio. Se pasan al formato nuevo sin cambiar lo cobrado (total):
+--   precio sin IVA = precio / 1.16;  subTotal = cantidad * precio sin IVA;  impuesto = total - subTotal
+-- La condicion cantidad * precio = total solo se cumple antes de convertir el renglon,
+-- asi que volver a correr el script no lo convierte dos veces.
 UPDATE d SET
+    precio              = ROUND(d.precio / 1.16, 2),
     porcentajeDescuento = 0,
     descuento           = 0,
     tasaImpuesto        = 16,
-    subTotal            = ROUND(d.total / 1.16, 2),
-    impuesto            = d.total - ROUND(d.total / 1.16, 2),
+    subTotal            = d.cantidad * ROUND(d.precio / 1.16, 2),
+    impuesto            = d.total - d.cantidad * ROUND(d.precio / 1.16, 2),
     claveProdServ       = p.claveProdServ,
     claveUnidad         = p.claveUnidad,
     unidad              = m.descripcion,
     objetoImp           = p.objetoImp,
     claveImpuesto       = p.claveImpuesto
 FROM DetalleVenta d
+JOIN Venta v ON v.idVenta = d.idVenta
 LEFT JOIN Producto p ON p.idProducto = d.idProducto
 LEFT JOIN c_Medida_Local m ON m.idMedidaLocal = p.idMedidaLocal
-WHERE d.subTotal IS NULL;
-UPDATE Venta SET descuentoTotal = 0 WHERE descuentoTotal IS NULL;
+WHERE v.idCliente IS NULL AND d.cantidad * d.precio = d.total;
+GO
+-- El encabezado de esas ventas = suma de sus productos (asi cuadran Historial, PDF y Reporte)
+UPDATE v SET
+    subTotal       = x.subTotal,
+    impuestoTotal  = x.impuesto,
+    descuentoTotal = 0
+FROM Venta v
+JOIN (SELECT idVenta, SUM(subTotal) AS subTotal, SUM(impuesto) AS impuesto
+      FROM DetalleVenta GROUP BY idVenta) x ON x.idVenta = v.idVenta
+WHERE v.idCliente IS NULL;
 GO
 
 --________________________________ Factura (diapositivas 28 y 29) ________________________________

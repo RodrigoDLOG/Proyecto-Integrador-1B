@@ -19,7 +19,7 @@ $(document).ready(function () {
         },
         "columns": [
             { "data": "idCategoria", "visible": false, "searchable": false },
-            { "data": "descripcion" },
+            { "data": "descripcion", render: $.fn.dataTable.render.text() },
             {
                 "data": "esActivo", render: function (data) {
                     if (data == 1)

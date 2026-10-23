@@ -30,14 +30,19 @@ namespace SistemaVenta.DAL.Implementacion
             {
                 try
                 {
-                    // 1) stock
+                    // 1) stock. Se resta en UNA sola sentencia que tambien revisa que alcance:
+                    //    UPDATE Producto SET stock = stock - cantidad WHERE idProducto = x AND stock >= cantidad
+                    //    Si dos cajeros venden lo ultimo al mismo tiempo, al segundo ya no le alcanza
+                    //    (0 filas actualizadas) y su venta se cancela, en vez de dejar el stock negativo.
                     foreach (DetalleVenta dv in entidad.DetalleVenta)
                     {
-                        Producto producto_encontrado = _dbContext.Productos.Where(p => p.IdProducto == dv.IdProducto).First();
-                        producto_encontrado.Stock = producto_encontrado.Stock - dv.Cantidad;
-                        _dbContext.Productos.Update(producto_encontrado);
+                        int filas = await _dbContext.Productos
+                            .Where(p => p.IdProducto == dv.IdProducto && p.Stock >= dv.Cantidad)
+                            .ExecuteUpdateAsync(s => s.SetProperty(p => p.Stock, p => p.Stock - dv.Cantidad));
+
+                        if (filas == 0)
+                            throw new TaskCanceledException($"No hay stock suficiente de {dv.DescripcionProducto}");
                     }
-                    await _dbContext.SaveChangesAsync();
 
                     // 2) correlativo: la fila con gestion = 'venta' guarda el ultimo numero usado
                     NumeroCorrelativo correlativo = _dbContext.NumeroCorrelativos.Where(n => n.Gestion == "venta").First();

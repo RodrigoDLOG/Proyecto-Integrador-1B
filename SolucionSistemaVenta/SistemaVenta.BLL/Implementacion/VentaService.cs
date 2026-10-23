@@ -50,6 +50,10 @@ namespace SistemaVenta.BLL.Implementacion
             entidad.DocumentoCliente = cliente.Rfc;
             entidad.NombreCliente = cliente.Nombre;
 
+            // Estos los pone el sistema, nunca el navegador (por ejemplo, una venta con fecha atrasada)
+            entidad.IdVenta = 0;
+            entidad.FechaRegistro = DateTime.Now;
+
             if (entidad.DetalleVenta == null || entidad.DetalleVenta.Count == 0)
                 throw new TaskCanceledException("Debe ingresar productos");
 

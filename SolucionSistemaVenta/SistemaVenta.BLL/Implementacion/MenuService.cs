@@ -53,5 +53,17 @@ namespace SistemaVenta.BLL.Implementacion
 
             return listaMenu;
         }
+
+        // El rol puede usar un controlador si tiene alguna opcion del menu que apunte a el.
+        // Es la misma regla de RolMenu con la que se arma el menu, pero aplicada en el servidor.
+        public async Task<bool> TieneAcceso(int idRol, string controlador)
+        {
+            IQueryable<RolMenu> tbRolMenu = await _repositorioRolMenu.Consultar(rm => rm.IdRol == idRol && rm.EsActivo == true);
+            IQueryable<Menu> tbMenu = await _repositorioMenu.Consultar(m => m.Controlador == controlador && m.EsActivo == true);
+
+            return (from rm in tbRolMenu
+                    join m in tbMenu on rm.IdMenu equals m.IdMenu
+                    select rm).Any();
+        }
     }
 }
