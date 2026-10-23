@@ -112,6 +112,7 @@ $("#tbventa tbody").on("click", ".btn-info", function () {
     $("#txtTipoDocumento").val(d.tipoDocumentoVenta)
     $("#txtDocumentoCliente").val(d.documentoCliente)
     $("#txtNombreCliente").val(d.nombreCliente)
+    $("#txtDescuento").val(d.descuentoTotal)
     $("#txtSubTotal").val(d.subTotal)
     $("#txtIGV").val(d.impuestoTotal)
     $("#txtTotal").val(d.total)
@@ -119,14 +120,18 @@ $("#tbventa tbody").on("click", ".btn-info", function () {
 
     $("#tbProductos tbody").html("");
 
+    // Version Mexico (diapositiva 26): descuento e impuesto por producto
     d.detalleVenta.forEach((item) => {
 
         $("#tbProductos tbody").append(
             $("<tr>").append(
                 $("<td>").text(item.descripcionProducto),
-                $("<td>").text(item.cantidad),
-                $("<td>").text(item.precio),
-                $("<td>").text(item.total),
+                $("<td>").addClass("text-right").text(item.cantidad),
+                $("<td>").addClass("text-right").text(item.precio),
+                $("<td>").addClass("text-right").text(`${item.descuento} (${parseFloat(item.porcentajeDescuento)}%)`),
+                $("<td>").addClass("text-right").text(item.subTotal),
+                $("<td>").addClass("text-right").text(`${item.impuesto} (${parseFloat(item.tasaImpuesto)}%)`),
+                $("<td>").addClass("text-right").text(item.total),
             )
         )
 

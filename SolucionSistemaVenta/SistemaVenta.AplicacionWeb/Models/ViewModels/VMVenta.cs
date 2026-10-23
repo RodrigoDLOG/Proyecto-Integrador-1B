@@ -14,6 +14,9 @@
         public string? ImpuestoTotal { get; set; }
         public string? Total { get; set; }
         public string? FechaRegistro { get; set; }
+        // Version Mexico
+        public int? IdCliente { get; set; }
+        public string? DescuentoTotal { get; set; }
         public virtual ICollection<VMDetalleVenta> DetalleVenta { get; set; }
     }
 }

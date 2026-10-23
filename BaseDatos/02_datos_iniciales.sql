@@ -85,8 +85,9 @@ INSERT INTO Configuracion(recurso, propiedad, valor) VALUES
 
 --________________________________ INSERTAR NEGOCIO ________________________________
 -- idNegocio es IDENTITY: queda en 1 tras el RESEED.
-INSERT INTO Negocio(urlLogo, nombreLogo, numeroDocumento, nombre, correo, direccion, telefono, porcentajeImpuesto, simboloMoneda)
-VALUES ('', '', '', 'Mi Tienda', '', '', '', 16, '$');
+-- Sin numeroDocumento ni porcentajeImpuesto: 05_version_mexico.sql los elimina de la tabla.
+INSERT INTO Negocio(urlLogo, nombreLogo, nombre, correo, direccion, telefono, simboloMoneda)
+VALUES ('', '', 'Mi Tienda', '', '', '', '$');
 
 --________________________________ INSERTAR CATEGORIAS ________________________________
 INSERT INTO Categoria(descripcion, esActivo) VALUES

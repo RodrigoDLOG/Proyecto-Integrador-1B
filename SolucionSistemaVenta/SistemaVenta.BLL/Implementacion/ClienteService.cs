@@ -109,6 +109,18 @@ namespace SistemaVenta.BLL.Implementacion
             }
         }
 
+        // Nueva Venta: traer el cliente por su RFC (diapositiva 26). Solo clientes activos.
+        public async Task<Cliente> ObtenerPorRfc(string rfc)
+        {
+            string limpio = (rfc ?? "").Trim().ToUpper();
+            Cliente cliente_encontrado = await _repositorio.Obtener(c => c.Rfc == limpio && c.EsActivo == true);
+
+            if (cliente_encontrado == null)
+                throw new TaskCanceledException($"No hay un cliente activo con el RFC {limpio}. Puede darlo de alta en Clientes");
+
+            return cliente_encontrado;
+        }
+
         // Limpia y revisa los datos antes de guardar
         private async Task Validar(Cliente entidad)
         {

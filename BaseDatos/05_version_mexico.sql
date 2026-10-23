@@ -23,6 +23,12 @@ INSERT INTO c_Medida_Local(descripcion, esActivo) VALUES
 GO
 
 --________________________________ Negocio (diapositiva 18) ________________________________
+-- Quitar Numero de Documento y % Impuesto (el impuesto ahora va en cada producto)
+IF COL_LENGTH('Negocio', 'numeroDocumento') IS NOT NULL
+    ALTER TABLE Negocio DROP COLUMN numeroDocumento;
+IF COL_LENGTH('Negocio', 'porcentajeImpuesto') IS NOT NULL
+    ALTER TABLE Negocio DROP COLUMN porcentajeImpuesto;
+GO
 -- Agregar RFC, Codigo Postal y Regimen Fiscal
 IF COL_LENGTH('Negocio', 'rfc') IS NULL
     ALTER TABLE Negocio ADD rfc VARCHAR(13);
@@ -34,7 +40,7 @@ IF COL_LENGTH('Negocio', 'regimenFiscal') IS NULL
 GO
 -- 601 = General de Ley Personas Morales (RFC de 12 caracteres)
 UPDATE Negocio SET
-    rfc           = COALESCE(rfc, NULLIF(numeroDocumento, ''), 'MTI260101AB1'),
+    rfc           = COALESCE(rfc, 'MTI260101AB1'),
     codigoPostal  = COALESCE(codigoPostal, '64000'),
     regimenFiscal = COALESCE(regimenFiscal, '601')
 WHERE idNegocio = 1;

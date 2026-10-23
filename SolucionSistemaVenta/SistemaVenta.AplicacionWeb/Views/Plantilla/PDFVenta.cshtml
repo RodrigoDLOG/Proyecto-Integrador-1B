@@ -104,6 +104,9 @@
                             </td>
                         </tr>
                         <tr>
+                            <td><p class="text">RFC: @Model.negocio.Rfc</p></td>
+                        </tr>
+                        <tr>
                             <td><p class="text">Direccion: @Model.negocio.Direccion</p></td>
                         </tr>
                         <tr>
@@ -122,7 +125,7 @@
                             <td><p class="text">@Model.venta.NombreCliente</p></td>
                         </tr>
                         <tr>
-                            <td><p class="text">@Model.venta.DocumentoCliente</p></td>
+                            <td><p class="text">RFC: @Model.venta.DocumentoCliente</p></td>
                         </tr>
                     </table>
                 </td>
@@ -135,27 +138,42 @@
             <thead>
                 <tr>
                     <th class="tbth">Producto</th>
-                    <th class="tbth" style="width:130px">Cantidad</th>
-                    <th class="tbth" style="width:130px">Precio</th>
-                    <th class="tbth" style="width:130px">Total</th>
+                    <th class="tbth" style="width:70px">Cantidad</th>
+                    <th class="tbth" style="width:110px">Precio Unitario</th>
+                    <th class="tbth" style="width:100px">Descuento</th>
+                    <th class="tbth" style="width:110px">Subtotal</th>
+                    <th class="tbth" style="width:100px">Impuesto</th>
+                    <th class="tbth" style="width:110px">Total</th>
                 </tr>
             </thead>
             <tbody>
                 @{
+                    // Version Mexico (diapositiva 26): descuento e impuesto por producto
                     foreach (var item in Model.venta.DetalleVenta)
                     {
                         <tr>
                             <td class="td-item"><p class="item">@item.DescripcionProducto</p></td>
                             <td class="td-item"><p class="item">@item.Cantidad</p></td>
                             <td class="td-item"><p class="item">@Model.negocio.SimboloMoneda @item.Precio</p></td>
+                            <td class="td-item"><p class="item">@Model.negocio.SimboloMoneda @item.Descuento</p></td>
+                            <td class="td-item"><p class="item">@Model.negocio.SimboloMoneda @item.SubTotal</p></td>
+                            <td class="td-item"><p class="item">@Model.negocio.SimboloMoneda @item.Impuesto</p></td>
                             <td style="background-color:#EDF6F9"><p class="item">@Model.negocio.SimboloMoneda @item.Total</p></td>
                         </tr>
 
                     }
                 }
                 <tr>
-                    <td colspan="2" rowspan="3">
+                    <td colspan="5" rowspan="4">
                     </td>
+                    <td class="td-item">
+                        <p class="item-2">Descuento</p>
+                    </td>
+                     <td class="item-3">
+                         <p>@Model.negocio.SimboloMoneda @Model.venta.DescuentoTotal</p>
+                    </td>
+                </tr>
+                <tr>
                     <td  class="td-item">
                         <p class="item-2">Sub Total</p>
                     </td>

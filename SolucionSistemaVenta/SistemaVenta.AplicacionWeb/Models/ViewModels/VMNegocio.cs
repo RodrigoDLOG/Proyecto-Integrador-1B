@@ -8,7 +8,6 @@
         public string? Correo { get; set; }
         public string? Direccion { get; set; }
         public string? Telefono { get; set; }
-        public string? PorcentajeImpuesto { get; set; }
         public string? SimboloMoneda { get; set; }
         public string? Rfc { get; set; }
         public string? CodigoPostal { get; set; }

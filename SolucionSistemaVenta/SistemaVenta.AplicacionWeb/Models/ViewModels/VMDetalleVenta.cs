@@ -9,5 +9,11 @@
         public int? Cantidad { get; set; }
         public string? Precio { get; set; }
         public string? Total { get; set; }
+        // Version Mexico (diapositiva 26): descuento e impuesto por producto
+        public string? PorcentajeDescuento { get; set; }
+        public string? Descuento { get; set; }
+        public string? SubTotal { get; set; }
+        public string? TasaImpuesto { get; set; }
+        public string? Impuesto { get; set; }
     }
 }

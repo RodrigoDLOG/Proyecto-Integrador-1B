@@ -175,8 +175,8 @@ GO
 
 -- ---------------------------------------------------------------------
 -- Negocio: datos de la tienda (una sola fila, idNegocio = 1).
--- Version Mexico: quitar numeroDocumento y porcentajeImpuesto;
--- agregar rfc, codigoPostal, regimenFiscal. Por ahora igual al tutorial.
+-- Igual al tutorial. 05_version_mexico.sql quita numeroDocumento y
+-- porcentajeImpuesto y agrega rfc, codigoPostal y regimenFiscal.
 -- ---------------------------------------------------------------------
 CREATE TABLE Negocio (
     idNegocio          INT IDENTITY(1,1) PRIMARY KEY,

@@ -38,19 +38,8 @@ namespace SistemaVenta.AplicacionWeb.Utilidades.Automapper
             #endregion
 
             #region Negocio
-            CreateMap<Negocio, VMNegocio>()
-                .ForMember(destino =>
-                    destino.PorcentajeImpuesto,
-                    opt => opt.MapFrom(origen => Convert.ToString(origen.PorcentajeImpuesto.Value, new CultureInfo("es-MX")))
-                );
-
-            CreateMap<VMNegocio , Negocio>()
-               .ForMember(destino =>
-                   destino.PorcentajeImpuesto,
-                   opt => opt.MapFrom(origen => Convert.ToDecimal(origen.PorcentajeImpuesto, new CultureInfo("es-MX")))
-               );
-
-
+            // Version Mexico: ya no hay % Impuesto que convertir (diapositiva 18), los campos son iguales
+            CreateMap<Negocio, VMNegocio>().ReverseMap();
             #endregion
 
             #region Categoria
@@ -200,9 +189,15 @@ namespace SistemaVenta.AplicacionWeb.Utilidades.Automapper
                  .ForMember(destino =>
                     destino.FechaRegistro,
                     opt => opt.MapFrom(origen => origen.FechaRegistro.Value.ToString("dd/MM/yyyy"))
+                )
+                .ForMember(destino =>
+                    destino.DescuentoTotal,
+                    opt => opt.MapFrom(origen => Convert.ToString(origen.DescuentoTotal ?? 0, new CultureInfo("es-MX")))
                 );
 
+            // Los importes los calcula VentaService; del navegador no se toman
             CreateMap<VMVenta, Venta>()
+              .ForMember(destino => destino.DescuentoTotal, opt => opt.Ignore())
               .ForMember(destino =>
                    destino.SubTotal,
                    opt => opt.MapFrom(origen => Convert.ToDecimal(origen.SubTotal, new CultureInfo("es-MX")))
@@ -226,9 +221,35 @@ namespace SistemaVenta.AplicacionWeb.Utilidades.Automapper
                  .ForMember(destino =>
                     destino.Total,
                     opt => opt.MapFrom(origen => Convert.ToString(origen.Total.Value, new CultureInfo("es-MX")))
+                )
+                .ForMember(destino =>
+                    destino.PorcentajeDescuento,
+                    opt => opt.MapFrom(origen => Convert.ToString(origen.PorcentajeDescuento ?? 0, new CultureInfo("es-MX")))
+                )
+                .ForMember(destino =>
+                    destino.Descuento,
+                    opt => opt.MapFrom(origen => Convert.ToString(origen.Descuento ?? 0, new CultureInfo("es-MX")))
+                )
+                .ForMember(destino =>
+                    destino.SubTotal,
+                    opt => opt.MapFrom(origen => Convert.ToString(origen.SubTotal ?? 0, new CultureInfo("es-MX")))
+                )
+                .ForMember(destino =>
+                    destino.TasaImpuesto,
+                    opt => opt.MapFrom(origen => Convert.ToString(origen.TasaImpuesto ?? 0, new CultureInfo("es-MX")))
+                )
+                .ForMember(destino =>
+                    destino.Impuesto,
+                    opt => opt.MapFrom(origen => Convert.ToString(origen.Impuesto ?? 0, new CultureInfo("es-MX")))
                 );
 
+            // Los importes los calcula VentaService; del navegador no se toman
             CreateMap< VMDetalleVenta,DetalleVenta>()
+               .ForMember(destino => destino.PorcentajeDescuento, opt => opt.Ignore())
+               .ForMember(destino => destino.Descuento, opt => opt.Ignore())
+               .ForMember(destino => destino.SubTotal, opt => opt.Ignore())
+               .ForMember(destino => destino.TasaImpuesto, opt => opt.Ignore())
+               .ForMember(destino => destino.Impuesto, opt => opt.Ignore())
                .ForMember(destino =>
                   destino.Precio,
                   opt => opt.MapFrom(origen => Convert.ToDecimal(origen.Precio, new CultureInfo("es-MX")))

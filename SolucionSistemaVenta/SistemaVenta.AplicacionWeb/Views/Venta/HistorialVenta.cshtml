@@ -52,7 +52,7 @@
                                                 <th>Fecha Registro</th>
                                                 <th>Numero Venta</th>
                                                 <th>Tipo Documento</th>
-                                                <th>Documento Cliente</th>
+                                                <th>RFC Cliente</th>
                                                 <th>Nombre Cliente</th>
                                                 <th>Total</th>
                                                 <th></th>
@@ -102,7 +102,7 @@
                                                         <input type="text" class="form-control form-control-sm" id="txtTipoDocumento" disabled>
                                                     </div>
                                                     <div class="form-group col-sm-4">
-                                                        <label for="txtDocumentoCliente">Documento Cliente</label>
+                                                        <label for="txtDocumentoCliente">RFC Cliente</label>
                                                         <input type="text" class="form-control form-control-sm" id="txtDocumentoCliente" disabled>
                                                     </div>
                                                     <div class="form-group col-sm-4">
@@ -111,28 +111,35 @@
                                                     </div>
                                                 </div>
                                                 <div class="form-row">
-                                                    <div class="form-group col-sm-4">
+                                                    <div class="form-group col-sm-3">
+                                                        <label for="txtDescuento">Descuento</label>
+                                                        <input type="text" class="form-control form-control-sm" id="txtDescuento" disabled>
+                                                    </div>
+                                                    <div class="form-group col-sm-3">
                                                         <label for="txtSubTotal">Sub Total</label>
                                                         <input type="text" class="form-control form-control-sm" id="txtSubTotal" disabled>
                                                     </div>
-                                                    <div class="form-group col-sm-4">
+                                                    <div class="form-group col-sm-3">
                                                         <label for="txtIGV">IVA</label>
                                                         <input type="text" class="form-control form-control-sm" id="txtIGV" disabled>
                                                     </div>
-                                                    <div class="form-group col-sm-4">
+                                                    <div class="form-group col-sm-3">
                                                         <label for="txtTotal">Total</label>
                                                         <input type="text" class="form-control form-control-sm" id="txtTotal" disabled>
                                                     </div>
                                                 </div>
                                                 <div class="row">
-                                                    <div class="col-sm-12">
+                                                    <div class="col-sm-12 table-responsive">
                                                         <table id="tbProductos" class="table table-sm table-striped">
                                                             <thead>
                                                                 <tr>
                                                                     <th>Producto</th>
-                                                                    <th>Cantidad</th>
-                                                                    <th>Precio</th>
-                                                                    <th>Total</th>
+                                                                    <th class="text-right">Cantidad</th>
+                                                                    <th class="text-right">Precio Unitario</th>
+                                                                    <th class="text-right">Descuento</th>
+                                                                    <th class="text-right">Subtotal</th>
+                                                                    <th class="text-right">Impuesto</th>
+                                                                    <th class="text-right">Total</th>
                                                                 </tr>
                                                             </thead>
                                                             <tbody>

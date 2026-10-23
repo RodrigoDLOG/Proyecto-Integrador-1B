@@ -169,13 +169,6 @@ public partial class DBVENTAContext : DbContext
                 .HasMaxLength(100)
                 .IsUnicode(false)
                 .HasColumnName("nombreLogo");
-            entity.Property(e => e.NumeroDocumento)
-                .HasMaxLength(50)
-                .IsUnicode(false)
-                .HasColumnName("numeroDocumento");
-            entity.Property(e => e.PorcentajeImpuesto)
-                .HasColumnType("decimal(10, 2)")
-                .HasColumnName("porcentajeImpuesto");
             entity.Property(e => e.SimboloMoneda)
                 .HasMaxLength(5)
                 .IsUnicode(false)

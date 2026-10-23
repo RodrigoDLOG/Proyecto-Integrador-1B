@@ -34,6 +34,26 @@ namespace SistemaVenta.AplicacionWeb.Controllers
             return StatusCode(StatusCodes.Status200OK, new { data = vmClienteLista });
         }
 
+        // Nueva Venta: traer el cliente por su RFC (diapositiva 26)
+        [HttpGet]
+        public async Task<IActionResult> ObtenerPorRfc(string rfc)
+        {
+            GenericResponse<VMCliente> gResponse = new GenericResponse<VMCliente>();
+
+            try
+            {
+                gResponse.Objeto = _mapper.Map<VMCliente>(await _clienteServicio.ObtenerPorRfc(rfc));
+                gResponse.Estado = true;
+            }
+            catch (Exception ex)
+            {
+                gResponse.Estado = false;
+                gResponse.Mensaje = ex.Message;
+            }
+
+            return StatusCode(StatusCodes.Status200OK, gResponse);
+        }
+
         [HttpPost]
         public async Task<IActionResult> Crear([FromBody] VMCliente modelo)
         {

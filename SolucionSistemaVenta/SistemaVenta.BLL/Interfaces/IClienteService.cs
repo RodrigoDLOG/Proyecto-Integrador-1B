@@ -8,5 +8,6 @@ namespace SistemaVenta.BLL.Interfaces
         Task<Cliente> Crear(Cliente entidad);
         Task<Cliente> Editar(Cliente entidad);
         Task<bool> Eliminar(int idCliente);
+        Task<Cliente> ObtenerPorRfc(string rfc);
     }
 }
