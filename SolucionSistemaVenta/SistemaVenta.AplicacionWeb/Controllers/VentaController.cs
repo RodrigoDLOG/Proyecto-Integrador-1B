@@ -21,16 +21,20 @@ namespace SistemaVenta.AplicacionWeb.Controllers
         private readonly IMapper _mapper;
         private readonly IConverter _converter;
 
+        private readonly IFacturaService _facturaServicio;
+
         public VentaController(ITipoDocumentoVentaService tipoDocumentoVentaServicio,
             IVentaService ventaServicio,
             IMapper mapper,
-             IConverter converter
+             IConverter converter,
+            IFacturaService facturaServicio
             )
         {
             _tipoDocumentoVentaServicio = tipoDocumentoVentaServicio;
             _ventaServicio = ventaServicio;
             _mapper = mapper;
             _converter = converter;
+            _facturaServicio = facturaServicio;
         }
 
         public IActionResult NuevaVenta()
@@ -127,6 +131,73 @@ namespace SistemaVenta.AplicacionWeb.Controllers
 
             return File(archivoPDF, "application/pdf");
 
+        }
+
+        // ______________________ Solicitar Factura (diapositivas 28 y 29) ______________________
+
+        [HttpGet]
+        public async Task<IActionResult> ObtenerFactura(string numeroVenta)
+        {
+            GenericResponse<VMFactura> gResponse = new GenericResponse<VMFactura>();
+
+            try
+            {
+                VMFactura factura = _mapper.Map<VMFactura>(await _facturaServicio.ObtenerPorVenta(numeroVenta));
+                factura.NumeroVenta = numeroVenta;
+
+                gResponse.Estado = true;
+                gResponse.Objeto = factura;
+            }
+            catch (Exception ex)
+            {
+                gResponse.Estado = false;
+                gResponse.Mensaje = ex.Message;
+            }
+
+            return StatusCode(StatusCodes.Status200OK, gResponse);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> SolicitarFactura([FromBody] VMFactura modelo)
+        {
+            GenericResponse<VMFactura> gResponse = new GenericResponse<VMFactura>();
+
+            try
+            {
+                Factura factura = await _facturaServicio.Solicitar(modelo.NumeroVenta ?? "", _mapper.Map<Factura>(modelo));
+                VMFactura resultado = _mapper.Map<VMFactura>(factura);
+                resultado.NumeroVenta = modelo.NumeroVenta;
+
+                // Si el timbrado fallo, la factura queda guardada con el motivo para reintentar
+                gResponse.Estado = factura.Uuid != null;
+                gResponse.Mensaje = factura.MensajeError;
+                gResponse.Objeto = resultado;
+            }
+            catch (Exception ex)
+            {
+                gResponse.Estado = false;
+                gResponse.Mensaje = ex.Message;
+            }
+
+            return StatusCode(StatusCodes.Status200OK, gResponse);
+        }
+
+        public async Task<IActionResult> DescargarFacturaXml(string numeroVenta)
+        {
+            Factura factura = await _facturaServicio.ObtenerPorVenta(numeroVenta);
+            if (factura.XmlTimbrado == null)
+                return NotFound();
+
+            return File(System.Text.Encoding.UTF8.GetBytes(factura.XmlTimbrado), "application/xml", $"Factura_{numeroVenta}_{factura.Uuid}.xml");
+        }
+
+        public async Task<IActionResult> MostrarFacturaPdf(string numeroVenta)
+        {
+            Factura factura = await _facturaServicio.ObtenerPorVenta(numeroVenta);
+            if (factura.PdfTimbrado == null)
+                return NotFound();
+
+            return File(factura.PdfTimbrado, "application/pdf");
         }
 
     }

@@ -2,3 +2,6 @@ bin/
 obj/
 .vs/
 *.user
+
+# Contrasena del servicio de timbrado (no va en git)
+SolucionSistemaVenta/SistemaVenta.AplicacionWeb/appsettings.Development.json

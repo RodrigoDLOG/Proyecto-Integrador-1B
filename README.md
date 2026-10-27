@@ -26,3 +26,13 @@ Aplicación web ASP.NET Core MVC (.NET 10) con SQL Server para gestionar usuario
 
 ## Archivos subidos
 Las imágenes de productos, fotos de usuario y logo del negocio se guardan localmente en `wwwroot/archivos/` (`producto/`, `usuario/`, `logo/`); no se usa ningún servicio externo.
+
+## Facturación (timbrado)
+
+Los datos del servicio de timbrado del profesor están en la sección `Timbrado` de
+`appsettings.json`. La contraseña de la cuenta `FIME` va en
+`SistemaVenta.AplicacionWeb/appsettings.Development.json`, que no se sube a git: copiarla
+de `Fime/Form1.cs` del material del profesor si ese archivo no existe.
+
+El certificado HTTPS de `ws.urbansa.com` venció el 19-ene-2026. Con
+`AceptarCertificadoVencido: false` el sistema no se conecta y guarda el motivo en la factura.

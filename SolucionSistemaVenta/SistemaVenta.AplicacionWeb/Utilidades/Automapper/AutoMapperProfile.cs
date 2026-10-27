@@ -212,6 +212,21 @@ namespace SistemaVenta.AplicacionWeb.Utilidades.Automapper
                );
             #endregion
 
+            #region Factura
+            CreateMap<Factura, VMFactura>()
+                .ForMember(destino =>
+                    destino.FechaTimbrado,
+                    opt => opt.MapFrom(origen => origen.FechaTimbrado.HasValue ? origen.FechaTimbrado.Value.ToString("dd/MM/yyyy HH:mm") : null)
+                );
+
+            // Del navegador solo se toman los 6 datos de la ventana; el resto lo llena el timbrado
+            CreateMap<VMFactura, Factura>()
+                .ForMember(destino => destino.Uuid, opt => opt.Ignore())
+                .ForMember(destino => destino.Folio, opt => opt.Ignore())
+                .ForMember(destino => destino.FechaTimbrado, opt => opt.Ignore())
+                .ForMember(destino => destino.MensajeError, opt => opt.Ignore());
+            #endregion
+
             #region DetalleVenta
             CreateMap<DetalleVenta, VMDetalleVenta>()
                  .ForMember(destino =>

@@ -40,6 +40,22 @@ namespace SistemaVenta.IOC
             // Version Mexico
             services.AddScoped<ICatalogoService, CatalogoService>();
             services.AddScoped<IClienteService, ClienteService>();
+
+            // Solicitar Factura: datos del servicio de timbrado (seccion "Timbrado" de appsettings.json)
+            ConfiguracionTimbrado timbrado = new ConfiguracionTimbrado
+            {
+                Url = configuration["Timbrado:Url"] ?? "",
+                Usuario = configuration["Timbrado:Usuario"] ?? "",
+                Password = configuration["Timbrado:Password"] ?? "",
+                PrefijoIdLocal = configuration["Timbrado:PrefijoIdLocal"] ?? "",
+                AceptarCertificadoVencido = string.Equals(configuration["Timbrado:AceptarCertificadoVencido"], "true", StringComparison.OrdinalIgnoreCase)
+            };
+            services.AddSingleton(timbrado);
+            // AddHttpClient le da a FacturaService el HttpClient con el que llama al servicio
+            services.AddHttpClient<IFacturaService, FacturaService>(cliente => cliente.Timeout = TimeSpan.FromSeconds(60))
+                .ConfigurePrimaryHttpMessageHandler(() => timbrado.AceptarCertificadoVencido
+                    ? new HttpClientHandler { ServerCertificateCustomValidationCallback = FacturaService.CertificadoValidoOVencido }
+                    : new HttpClientHandler());
         }
     }
 }

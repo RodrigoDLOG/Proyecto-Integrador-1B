@@ -157,3 +157,121 @@ function precargarUltimos30Dias() {
     $("#txtFechaFin").val(fechaDDMMYYYY(hoy))
     $("#btnBuscar").click()
 }
+
+// ______________________ Version Mexico: Solicitar Factura (diapositivas 28 y 29) ______________________
+
+let facturaActual = null    // la factura guardada de la venta abierta, o los datos que sugiere el servidor
+
+function llenarCatalogo(idCombo, url) {
+    fetch(url)
+        .then(response => response.ok ? response.json() : Promise.reject(response))
+        .then(lista => {
+            $(idCombo).html("")
+            lista.forEach(item => $(idCombo).append($("<option>").val(item.clave).text(`${item.clave} - ${item.descripcion}`)))
+        })
+}
+
+$(document).ready(function () {
+    llenarCatalogo("#cboUsoCfdi", "/Catalogo/UsosCfdi")
+    llenarCatalogo("#cboRegimenFiscal", "/Catalogo/RegimenesFiscales")
+    llenarCatalogo("#cboFormaPago", "/Catalogo/FormasPago")
+    llenarCatalogo("#cboTipoComprobante", "/Catalogo/TiposComprobante")
+    llenarCatalogo("#cboMetodoPago", "/Catalogo/MetodosPago")
+})
+
+// Al abrir el detalle de una venta se consulta si ya tiene factura
+$("#modalData").on("show.bs.modal", function () {
+    facturaActual = null
+    $("#btnSolicitarFactura").removeClass("d-none").prop("disabled", true)
+    $("#linkFacturaXml, #linkFacturaPdf").addClass("d-none")
+    $("#txtEstadoFactura").removeClass("text-danger text-success").text("")
+
+    const numeroVenta = $("#txtNumVenta").val()
+
+    fetch(`/Venta/ObtenerFactura?numeroVenta=${numeroVenta}`)
+        .then(response => response.ok ? response.json() : Promise.reject(response))
+        .then(responseJson => {
+            if (!responseJson.estado) {
+                // Por ejemplo, una venta de antes de la Version Mexico (sin cliente con RFC)
+                $("#txtEstadoFactura").text(responseJson.mensaje)
+                return
+            }
+
+            facturaActual = responseJson.objeto
+
+            if (facturaActual.uuid) {
+                $("#btnSolicitarFactura").addClass("d-none")
+                $("#linkFacturaXml").attr("href", `/Venta/DescargarFacturaXml?numeroVenta=${numeroVenta}`).removeClass("d-none")
+                $("#linkFacturaPdf").attr("href", `/Venta/MostrarFacturaPdf?numeroVenta=${numeroVenta}`).removeClass("d-none")
+                $("#txtEstadoFactura").addClass("text-success").text(`Facturada. UUID: ${facturaActual.uuid}`)
+            } else {
+                $("#btnSolicitarFactura").prop("disabled", false)
+                if (facturaActual.mensajeError)
+                    $("#txtEstadoFactura").addClass("text-danger").text(`Ultimo intento: ${facturaActual.mensajeError}`)
+            }
+        })
+})
+
+// Se cierra el detalle y se abre la ventana con los 6 datos (Bootstrap no apila dos ventanas)
+$("#btnSolicitarFactura").click(function () {
+    $("#txtFacturaNumVenta").text(facturaActual.numeroVenta)
+    $("#txtFacturaCliente").text(`${$("#txtDocumentoCliente").val()} - ${$("#txtNombreCliente").val()}`)
+    $("#cboUsoCfdi").val(facturaActual.usoCfdi)
+    $("#cboRegimenFiscal").val(facturaActual.regimenFiscalReceptor)
+    $("#cboFormaPago").val(facturaActual.formaPago)
+    $("#cboTipoComprobante").val(facturaActual.tipoComprobante)
+    $("#cboMetodoPago").val(facturaActual.metodoPago)
+    $("#txtFacturaCodigoPostal").val(facturaActual.codigoPostal)
+
+    $("#modalData").one("hidden.bs.modal", () => $("#modalFactura").modal("show"))
+    $("#modalData").modal("hide")
+})
+
+// Al cerrar la ventana de factura se regresa al detalle, que vuelve a consultar su estado
+$("#modalFactura").on("hidden.bs.modal", function () {
+    $("#modalData").modal("show")
+})
+
+$("#btnTimbrar").click(function () {
+    const modelo = {
+        numeroVenta: facturaActual.numeroVenta,
+        usoCfdi: $("#cboUsoCfdi").val(),
+        regimenFiscalReceptor: $("#cboRegimenFiscal").val(),
+        formaPago: $("#cboFormaPago").val(),
+        tipoComprobante: $("#cboTipoComprobante").val(),
+        metodoPago: $("#cboMetodoPago").val(),
+        codigoPostal: $("#txtFacturaCodigoPostal").val().trim()
+    }
+
+    if (!/^[0-9]{5}$/.test(modelo.codigoPostal)) {
+        toastr.warning("", "El codigo postal debe tener 5 digitos")
+        return
+    }
+
+    // Deshabilitado mientras responde, para no pedir dos veces la misma factura
+    $("#btnTimbrar").prop("disabled", true)
+    $("#modalFactura").find("div.modal-content").LoadingOverlay("show")
+
+    fetch("/Venta/SolicitarFactura", {
+        method: "POST",
+        headers: { "Content-Type": "application/json; charset=utf-8" },
+        body: JSON.stringify(modelo)
+    })
+        .then(response => response.ok ? response.json() : Promise.reject(response))
+        .then(responseJson => {
+            $("#btnTimbrar").prop("disabled", false)
+            $("#modalFactura").find("div.modal-content").LoadingOverlay("hide")
+
+            if (responseJson.estado) {
+                $("#modalFactura").modal("hide")
+                swal("Factura timbrada!", `UUID: ${responseJson.objeto.uuid}`, "success")
+            } else {
+                swal("No se pudo facturar", responseJson.mensaje || "Intente de nuevo", "error")
+            }
+        })
+        .catch(() => {
+            $("#btnTimbrar").prop("disabled", false)
+            $("#modalFactura").find("div.modal-content").LoadingOverlay("hide")
+            swal("Lo sentimos!", "No se pudo comunicar con el servidor", "error")
+        })
+})

@@ -153,8 +153,60 @@
                                     </form>
                                 </div>
                                 <div class="modal-footer">
+                                    <!-- Version Mexico (diapositiva 28): estado de la factura de esta venta -->
+                                    <small class="mr-auto" id="txtEstadoFactura"></small>
+                                    <button class="btn btn-warning btn-sm" type="button" id="btnSolicitarFactura">Solicitar Factura</button>
+                                    <a href="#" class="btn btn-success btn-sm d-none" id="linkFacturaXml">XML</a>
+                                    <a href="#" class="btn btn-success btn-sm d-none" target="_blank" id="linkFacturaPdf">PDF Factura</a>
                                     <a href="#" class="btn btn-primary btn-sm"  target="_blank" id="linkImprimir" >Imprimir</a>
                                     <button class="btn btn-danger btn-sm" type="button" data-dismiss="modal">Cerrar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Ventana Solicitar Factura (diapositiva 29) -->
+                    <div class="modal fade" id="modalFactura" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="static">
+                        <div class="modal-dialog" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h6>Solicitar Factura - Venta <span id="txtFacturaNumVenta"></span></h6>
+                                    <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true">×</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body">
+                                    <p class="small mb-3" id="txtFacturaCliente"></p>
+                                    <div class="form-group">
+                                        <label for="cboUsoCfdi">Uso del CFDI</label>
+                                        <select class="form-control form-control-sm" id="cboUsoCfdi"></select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="cboRegimenFiscal">Régimen Fiscal del cliente</label>
+                                        <select class="form-control form-control-sm" id="cboRegimenFiscal"></select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="cboFormaPago">Forma de Pago</label>
+                                        <select class="form-control form-control-sm" id="cboFormaPago"></select>
+                                    </div>
+                                    <div class="form-row">
+                                        <div class="form-group col-sm-6">
+                                            <label for="cboTipoComprobante">Tipo de Comprobante</label>
+                                            <select class="form-control form-control-sm" id="cboTipoComprobante" disabled></select>
+                                        </div>
+                                        <div class="form-group col-sm-6">
+                                            <label for="cboMetodoPago">Método de Pago</label>
+                                            <select class="form-control form-control-sm" id="cboMetodoPago"></select>
+                                        </div>
+                                    </div>
+                                    <div class="form-group mb-0">
+                                        <label for="txtFacturaCodigoPostal">Código Postal del cliente</label>
+                                        <input type="text" class="form-control form-control-sm" id="txtFacturaCodigoPostal" maxlength="5">
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button class="btn btn-primary btn-sm" type="button" id="btnTimbrar">Facturar</button>
+                                    <button class="btn btn-danger btn-sm" type="button" data-dismiss="modal">Cancelar</button>
                                 </div>
                             </div>
                         </div>
