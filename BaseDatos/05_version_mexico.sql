@@ -221,6 +221,12 @@ CREATE TABLE Factura (
 );
 GO
 
+-- Cuantas veces se ha mandado a timbrar. El servicio no acepta repetir un idLocal (ni el de un
+-- intento que fallo: lo deja "en proceso"), asi que cada intento lleva su numero en el idLocal.
+IF COL_LENGTH('Factura', 'intentos') IS NULL
+    ALTER TABLE Factura ADD intentos INT NOT NULL CONSTRAINT DF_Factura_Intentos DEFAULT 0;
+GO
+
 --________________________________ Menu Clientes (diapositiva 20) ________________________________
 IF NOT EXISTS (SELECT 1 FROM Menu WHERE controlador = 'Cliente')
 INSERT INTO Menu(descripcion, idMenuPadre, controlador, paginaAccion, esActivo)

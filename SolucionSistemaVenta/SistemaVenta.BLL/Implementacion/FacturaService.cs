@@ -103,7 +103,11 @@ namespace SistemaVenta.BLL.Implementacion
             factura.MetodoPago = datos.MetodoPago;
             factura.CodigoPostal = datos.CodigoPostal;
 
-            string xml = CfdiXml.Construir(venta, cliente, negocio, factura, _configuracion.PrefijoIdLocal);
+            // idLocal = matricula + numero de venta + intento (2101063 000008 01). El servicio no acepta
+            // repetirlo, ni siquiera el de un intento que fallo, por eso cada intento lleva su numero.
+            factura.Intentos++;
+            string idLocal = $"{_configuracion.PrefijoIdLocal}{venta.NumeroVenta}{factura.Intentos:00}";
+            string xml = CfdiXml.Construir(venta, cliente, negocio, factura, idLocal);
 
             try
             {
@@ -202,9 +206,14 @@ namespace SistemaVenta.BLL.Implementacion
             if (!string.IsNullOrEmpty(resultado))
                 return Convert.FromBase64String(resultado);
 
-            // Si el XML tiene un error, el servicio responde con un SOAP Fault que trae el motivo
+            // Si algo falla, el servicio responde con un SOAP Fault. Trae el nombre de la excepcion y
+            // donde ocurrio ("System...SoapException: <motivo>\n at Timbrado..."): solo se deja el motivo.
             string motivo = documento.Descendants("faultstring").FirstOrDefault()?.Value;
-            throw new TaskCanceledException(motivo ?? $"El servicio de timbrado respondio {(int)respuesta.StatusCode} sin factura");
+            if (motivo == null)
+                throw new TaskCanceledException($"El servicio de timbrado respondio {(int)respuesta.StatusCode} sin factura");
+
+            motivo = motivo.Split('\n')[0].Replace("System.Web.Services.Protocols.SoapException:", "").Trim();
+            throw new TaskCanceledException("El servicio de timbrado respondio: " + motivo);
         }
 
         // Saca del .zip el XML y el PDF, y del XML el UUID (folio fiscal), el folio y la fecha

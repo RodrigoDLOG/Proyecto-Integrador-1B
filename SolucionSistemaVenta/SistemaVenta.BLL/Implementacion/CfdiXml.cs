@@ -10,7 +10,7 @@ namespace SistemaVenta.BLL.Implementacion
     // XElement se encarga de escapar los textos (por ejemplo un "&" en el nombre del cliente).
     public static class CfdiXml
     {
-        public static string Construir(Venta venta, Cliente cliente, Negocio negocio, Factura factura, string prefijoIdLocal)
+        public static string Construir(Venta venta, Cliente cliente, Negocio negocio, Factura factura, string idLocal)
         {
             List<DetalleVenta> detalles = venta.DetalleVenta.ToList();
             List<DetalleVenta> conImpuesto = detalles.Where(d => d.ObjetoImp != "01").ToList();
@@ -25,7 +25,7 @@ namespace SistemaVenta.BLL.Implementacion
             string domicilioReceptor = publicoGeneral ? negocio.CodigoPostal! : factura.CodigoPostal!;
 
             XElement comprobante = new XElement("Comprobante",
-                Campo("idLocal", prefijoIdLocal + venta.NumeroVenta),
+                Campo("idLocal", idLocal),
                 Campo("version", "4.0"),
                 Campo("serie"),
                 Campo("folio", venta.NumeroVenta),

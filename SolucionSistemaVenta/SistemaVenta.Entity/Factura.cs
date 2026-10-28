@@ -34,5 +34,8 @@ public partial class Factura
 
     public string? MensajeError { get; set; }
 
+    // Veces que se ha mandado a timbrar; va al final del idLocal para no repetirlo
+    public int Intentos { get; set; }
+
     public DateTime? FechaRegistro { get; set; }
 }

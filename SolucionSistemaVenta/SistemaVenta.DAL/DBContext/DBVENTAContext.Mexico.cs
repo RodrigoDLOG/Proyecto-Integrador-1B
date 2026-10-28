@@ -222,6 +222,7 @@ public partial class DBVENTAContext
                 .HasMaxLength(500)
                 .IsUnicode(false)
                 .HasColumnName("mensajeError");
+            entity.Property(e => e.Intentos).HasColumnName("intentos");
             entity.Property(e => e.FechaRegistro)
                 .HasDefaultValueSql("(getdate())")
                 .HasColumnType("datetime")
