@@ -21,6 +21,17 @@ IF NOT EXISTS (SELECT 1 FROM c_Medida_Local)
 INSERT INTO c_Medida_Local(descripcion, esActivo) VALUES
 ('Pieza', 1), ('Caja', 1), ('Paquete', 1), ('Kit', 1), ('Servicio', 1);
 GO
+-- Clave de cada medida y las que faltaban de la diapositiva 23
+IF COL_LENGTH('c_Medida_Local', 'claveMedida') IS NULL
+    ALTER TABLE c_Medida_Local ADD claveMedida VARCHAR(5);
+GO
+UPDATE c_Medida_Local SET claveMedida = CASE descripcion
+    WHEN 'Pieza' THEN 'PZA' WHEN 'Caja' THEN 'CJA' WHEN 'Paquete' THEN 'PAQ'
+    WHEN 'Kit' THEN 'KIT' WHEN 'Servicio' THEN 'SER' END
+WHERE claveMedida IS NULL;
+IF NOT EXISTS (SELECT 1 FROM c_Medida_Local WHERE claveMedida = 'KG')
+INSERT INTO c_Medida_Local(claveMedida, descripcion, esActivo) VALUES ('KG', 'Kilo Gramo', 1), ('Mts', 'Metros', 1);
+GO
 
 --________________________________ Negocio (diapositiva 18) ________________________________
 -- Agregar RFC, Codigo Postal y Regimen Fiscal
@@ -30,7 +41,7 @@ IF COL_LENGTH('Negocio', 'codigoPostal') IS NULL
     ALTER TABLE Negocio ADD codigoPostal VARCHAR(5);
 IF COL_LENGTH('Negocio', 'regimenFiscal') IS NULL
     ALTER TABLE Negocio ADD regimenFiscal VARCHAR(3)
-        CONSTRAINT FK_Negocio_RegimenFiscal REFERENCES c_RegimenFiscal_SAT(c_RegimenFiscal);
+        CONSTRAINT FK_Negocio_RegimenFiscal REFERENCES c_RegimenFiscal(c_RegimenFiscal);
 GO
 -- Si el negocio ya tenia capturado su RFC en "Numero de Documento", se conserva antes de borrar
 -- esa columna. Va con EXEC porque al volver a correr el script la columna ya no existe.
@@ -52,8 +63,8 @@ IF COL_LENGTH('Negocio', 'porcentajeImpuesto') IS NOT NULL
 GO
 
 --________________________________ Cliente (diapositivas 20 y 21) ________________________________
-IF OBJECT_ID('Cliente') IS NULL
-CREATE TABLE Cliente (
+IF OBJECT_ID('Clientes') IS NULL
+CREATE TABLE Clientes (
     idCliente               INT IDENTITY(1,1) PRIMARY KEY,
     nombre                  VARCHAR(80),
     correo                  VARCHAR(50),
@@ -63,13 +74,13 @@ CREATE TABLE Cliente (
     esActivo                BIT,
     fechaRegistro           DATETIME DEFAULT GETDATE(),
     CONSTRAINT UQ_Cliente_Rfc UNIQUE (rfc),
-    CONSTRAINT FK_Cliente_RegimenFiscal FOREIGN KEY (regimenFiscalReceptor) REFERENCES c_RegimenFiscal_SAT(c_RegimenFiscal)
+    CONSTRAINT FK_Cliente_RegimenFiscal FOREIGN KEY (regimenFiscalReceptor) REFERENCES c_RegimenFiscal(c_RegimenFiscal)
 );
 GO
 -- Diapositiva 27: sin cliente definido es "Venta a Publico En General" (RFC generico del SAT, regimen 616).
 -- La u con acento va como NCHAR(250) para que el script no dependa de como se abra el archivo.
-IF NOT EXISTS (SELECT 1 FROM Cliente WHERE rfc = 'XAXX010101000')
-INSERT INTO Cliente(nombre, correo, rfc, domicilioFiscalReceptor, regimenFiscalReceptor, esActivo)
+IF NOT EXISTS (SELECT 1 FROM Clientes WHERE rfc = 'XAXX010101000')
+INSERT INTO Clientes(nombre, correo, rfc, domicilioFiscalReceptor, regimenFiscalReceptor, esActivo)
 VALUES (N'Venta a P' + NCHAR(250) + N'blico En General', '', 'XAXX010101000', '64000', '616', 1);
 GO
 
@@ -121,7 +132,7 @@ GO
 ALTER TABLE Venta ALTER COLUMN documentoCliente VARCHAR(13);
 ALTER TABLE Venta ALTER COLUMN nombreCliente VARCHAR(80);
 IF COL_LENGTH('Venta', 'idCliente') IS NULL
-    ALTER TABLE Venta ADD idCliente INT CONSTRAINT FK_Venta_Cliente REFERENCES Cliente(idCliente);
+    ALTER TABLE Venta ADD idCliente INT CONSTRAINT FK_Venta_Cliente REFERENCES Clientes(idCliente);
 IF COL_LENGTH('Venta', 'descuentoTotal') IS NULL
     ALTER TABLE Venta ADD descuentoTotal DECIMAL(10,2);
 GO
@@ -214,7 +225,7 @@ CREATE TABLE Factura (
     CONSTRAINT UQ_Factura_Venta UNIQUE (idVenta),
     CONSTRAINT FK_Factura_Venta           FOREIGN KEY (idVenta)               REFERENCES Venta(idVenta),
     CONSTRAINT FK_Factura_UsoCFDI         FOREIGN KEY (usoCFDI)               REFERENCES c_UsoCFDI(c_UsoCFDI),
-    CONSTRAINT FK_Factura_RegimenFiscal   FOREIGN KEY (regimenFiscalReceptor) REFERENCES c_RegimenFiscal_SAT(c_RegimenFiscal),
+    CONSTRAINT FK_Factura_RegimenFiscal   FOREIGN KEY (regimenFiscalReceptor) REFERENCES c_RegimenFiscal(c_RegimenFiscal),
     CONSTRAINT FK_Factura_FormaPago       FOREIGN KEY (formaPago)             REFERENCES c_FormaPago_SAT(c_FormaPago),
     CONSTRAINT FK_Factura_TipoComprobante FOREIGN KEY (tipoComprobante)       REFERENCES c_TipoDeComprobante_SAT(c_TipoDeComprobante),
     CONSTRAINT FK_Factura_MetodoPago      FOREIGN KEY (metodoPago)            REFERENCES c_MetodoPago_SAT(c_MetodoPago)

@@ -75,9 +75,11 @@ namespace SistemaVenta.BLL.Implementacion
             return query.ToList();
         }
 
+        // Solo 01 (no lleva impuesto) y 02 (si lo lleva). Del 03 en adelante son casos especiales
+        // (por ejemplo 04: objeto de impuesto que no lo causa) que este sistema no maneja.
         public async Task<List<CObjetoImpSat>> ObjetosImpuesto()
         {
-            IQueryable<CObjetoImpSat> query = await _repositorioObjetoImp.Consultar();
+            IQueryable<CObjetoImpSat> query = await _repositorioObjetoImp.Consultar(o => o.CObjetoImpuesto == "01" || o.CObjetoImpuesto == "02");
             return query.OrderBy(o => o.CObjetoImpuesto).ToList();
         }
 

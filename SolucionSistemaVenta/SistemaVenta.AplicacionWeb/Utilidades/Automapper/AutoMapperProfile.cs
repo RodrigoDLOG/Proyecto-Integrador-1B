@@ -157,7 +157,8 @@ namespace SistemaVenta.AplicacionWeb.Utilidades.Automapper
             CreateMap<CClaveProdServSat, VMCatalogo>()
                 .ForMember(destino => destino.Clave, opt => opt.MapFrom(origen => origen.CClaveProdServ));
             CreateMap<CMedidaLocal, VMCatalogo>()
-                .ForMember(destino => destino.Clave, opt => opt.MapFrom(origen => origen.IdMedidaLocal.ToString()));
+                .ForMember(destino => destino.Clave, opt => opt.MapFrom(origen => origen.IdMedidaLocal.ToString()))
+                .ForMember(destino => destino.Descripcion, opt => opt.MapFrom(origen => origen.ClaveMedida + " - " + origen.Descripcion));
             #endregion
 
             #region TipoDocumentoVenta

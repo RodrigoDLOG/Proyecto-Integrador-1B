@@ -143,7 +143,7 @@ public partial class DBVENTAContext
         {
             entity.HasKey(e => e.IdCliente);
 
-            entity.ToTable("Cliente");
+            entity.ToTable("Clientes");
 
             entity.Property(e => e.IdCliente).HasColumnName("idCliente");
             entity.Property(e => e.Nombre)
@@ -236,6 +236,10 @@ public partial class DBVENTAContext
             entity.ToTable("c_Medida_Local");
 
             entity.Property(e => e.IdMedidaLocal).HasColumnName("idMedidaLocal");
+            entity.Property(e => e.ClaveMedida)
+                .HasMaxLength(5)
+                .IsUnicode(false)
+                .HasColumnName("claveMedida");
             entity.Property(e => e.Descripcion)
                 .HasMaxLength(50)
                 .IsUnicode(false)
@@ -252,7 +256,7 @@ public partial class DBVENTAContext
         modelBuilder.Entity<CRegimenFiscalSat>(entity =>
         {
             entity.HasKey(e => e.CRegimenFiscal);
-            entity.ToTable("c_RegimenFiscal_SAT");
+            entity.ToTable("c_RegimenFiscal");
             entity.Property(e => e.CRegimenFiscal).HasMaxLength(3).IsUnicode(false).HasColumnName("c_RegimenFiscal");
             entity.Property(e => e.Descripcion).HasMaxLength(150).HasColumnName("descripcion");
             entity.Property(e => e.Fisica).HasMaxLength(2).HasColumnName("fisica");

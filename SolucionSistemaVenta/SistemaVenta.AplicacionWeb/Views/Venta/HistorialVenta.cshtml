@@ -9,6 +9,8 @@
  <!-- ============================================================
     =ESTILOS PARA ESTA PAGINA
     ===============================================================-->
+    <link rel="stylesheet" href="~/vendor/datatables/dataTables.bootstrap4.min.css">
+    <link rel="stylesheet" href="~/vendor/datatables/extensiones/css/buttons.dataTables.min.css">
     <link href="~/vendor/jquery-ui/jquery-ui.css" rel="stylesheet">
 }
 
@@ -28,11 +30,11 @@
                                 </div>
                                 <div class="form-group col-sm-3 busqueda-fecha">
                                     <label for="txtFechaInicio">Fecha Inicio</label>
-                                    <input type="text" class="form-control form-control-sm" id="txtFechaInicio">
+                                    <input type="text" class="form-control form-control-sm" id="txtFechaInicio" readonly>
                                 </div>
                                 <div class="form-group col-sm-3 busqueda-fecha">
                                     <label for="txtFechaFin">Fecha Fin</label>
-                                    <input type="text" class="form-control form-control-sm" id="txtFechaFin">
+                                    <input type="text" class="form-control form-control-sm" id="txtFechaFin" readonly>
                                 </div>
                                 <div class="form-group col-sm-3 busqueda-venta">
                                     <label for="txtNumeroVenta">Numero Venta</label>
@@ -46,7 +48,7 @@
                             <hr/>
                             <div class="row">
                                 <div class="col-sm-12">
-                                    <table class="table table-sm table-striped" id="tbventa">
+                                    <table class="table table-sm table-striped" id="tbventa" style="width:100%">
                                         <thead>
                                             <tr>
                                                 <th>Fecha Registro</th>
@@ -155,7 +157,6 @@
                                 <div class="modal-footer">
                                     <!-- Version Mexico (diapositiva 28): estado de la factura de esta venta -->
                                     <small class="mr-auto" id="txtEstadoFactura"></small>
-                                    <button class="btn btn-warning btn-sm" type="button" id="btnSolicitarFactura">Solicitar Factura</button>
                                     <a href="#" class="btn btn-success btn-sm d-none" id="linkFacturaXml">XML</a>
                                     <a href="#" class="btn btn-success btn-sm d-none" target="_blank" id="linkFacturaPdf">PDF Factura</a>
                                     <a href="#" class="btn btn-primary btn-sm"  target="_blank" id="linkImprimir" >Imprimir</a>
@@ -177,6 +178,7 @@
                                 </div>
                                 <div class="modal-body">
                                     <p class="small mb-3" id="txtFacturaCliente"></p>
+                                    <p class="small mb-3 text-danger" id="txtFacturaError"></p>
                                     <div class="form-group">
                                         <label for="cboUsoCfdi">Uso del CFDI</label>
                                         <select class="form-control form-control-sm" id="cboUsoCfdi"></select>
@@ -217,6 +219,12 @@
                      <!-- ============================================================
     =SCRIPTS PARA ESTA PAGINA
     ===============================================================-->
+    <script src="~/vendor/datatables/jquery.dataTables.min.js"></script>
+    <script src="~/vendor/datatables/dataTables.bootstrap4.min.js"></script>
+    <script src="~/vendor/datatables/extensiones/js/dataTables.buttons.min.js"></script>
+    <script src="~/vendor/datatables/extensiones/js/jszip.min.js"></script>
+    <script src="~/vendor/datatables/extensiones/js/buttons.html5.min.js"></script>
+
     <script src="~/vendor/jquery-ui/jquery-ui.js"></script>
     <script src="~/vendor/jquery-ui/idioma/datepicker-es.js"></script>
 

@@ -104,7 +104,12 @@ namespace SistemaVenta.AplicacionWeb.Controllers
         public async Task<IActionResult> Historial(string numeroVenta,string fechaInicio, string fechaFin)
         {
 
-            List<VMVenta> vmHistorialVenta = _mapper.Map<List<VMVenta>>(await _ventaServicio.Historial(numeroVenta, fechaInicio, fechaFin));
+            List<Venta> ventas = await _ventaServicio.Historial(numeroVenta, fechaInicio, fechaFin);
+            List<VMVenta> vmHistorialVenta = _mapper.Map<List<VMVenta>>(ventas);
+
+            // Las ya facturadas llevan su UUID: su boton Solicitar Factura sale deshabilitado (diapositiva 28)
+            Dictionary<int, string> timbradas = await _facturaServicio.Timbradas(ventas.Select(v => v.IdVenta).ToList());
+            vmHistorialVenta.ForEach(v => v.Uuid = timbradas.GetValueOrDefault(v.IdVenta));
 
             return StatusCode(StatusCodes.Status200OK, vmHistorialVenta);
         }
@@ -184,20 +189,34 @@ namespace SistemaVenta.AplicacionWeb.Controllers
 
         public async Task<IActionResult> DescargarFacturaXml(string numeroVenta)
         {
-            Factura factura = await _facturaServicio.ObtenerPorVenta(numeroVenta);
-            if (factura.XmlTimbrado == null)
-                return NotFound();
+            try
+            {
+                Factura factura = await _facturaServicio.ObtenerPorVenta(numeroVenta);
+                if (factura.XmlTimbrado == null)
+                    return NotFound();
 
-            return File(System.Text.Encoding.UTF8.GetBytes(factura.XmlTimbrado), "application/xml", $"Factura_{numeroVenta}_{factura.Uuid}.xml");
+                return File(System.Text.Encoding.UTF8.GetBytes(factura.XmlTimbrado), "application/xml", $"Factura_{numeroVenta}_{factura.Uuid}.xml");
+            }
+            catch (TaskCanceledException)
+            {
+                return NotFound();
+            }
         }
 
         public async Task<IActionResult> MostrarFacturaPdf(string numeroVenta)
         {
-            Factura factura = await _facturaServicio.ObtenerPorVenta(numeroVenta);
-            if (factura.PdfTimbrado == null)
-                return NotFound();
+            try
+            {
+                Factura factura = await _facturaServicio.ObtenerPorVenta(numeroVenta);
+                if (factura.PdfTimbrado == null)
+                    return NotFound();
 
-            return File(factura.PdfTimbrado, "application/pdf");
+                return File(factura.PdfTimbrado, "application/pdf");
+            }
+            catch (TaskCanceledException)
+            {
+                return NotFound();
+            }
         }
 
     }

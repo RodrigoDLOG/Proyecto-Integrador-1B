@@ -118,8 +118,8 @@ namespace SistemaVenta.BLL.Implementacion
                 Dictionary<string, int> resultado = query
                     .Include(v => v.IdVentaNavigation)
                     .Where(dv => dv.IdVentaNavigation.FechaRegistro.Value.Date >= FechaInicio.Date)
-                    .GroupBy(dv => dv.DescripcionProducto ?? "(sin descripcion)").OrderByDescending(g => g.Count())
-                    .Select(dv => new { producto = dv.Key, total = dv.Count() }).Take(4)
+                    .GroupBy(dv => dv.DescripcionProducto ?? "(sin descripcion)").OrderByDescending(g => g.Sum(dv => dv.Cantidad ?? 0))
+                    .Select(dv => new { producto = dv.Key, total = dv.Sum(d => d.Cantidad ?? 0) }).Take(4)
                     .ToDictionary(keySelector: r => r.producto, elementSelector: r => r.total);
 
                 return resultado;

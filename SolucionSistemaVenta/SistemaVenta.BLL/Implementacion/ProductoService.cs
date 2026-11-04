@@ -162,6 +162,9 @@ namespace SistemaVenta.BLL.Implementacion
                 throw new TaskCanceledException("Seleccione la clave de producto del SAT");
             if (string.IsNullOrWhiteSpace(entidad.ObjetoImp))
                 throw new TaskCanceledException("Seleccione el objeto del impuesto");
+            // Del 03 en adelante son casos especiales que este sistema no maneja (ver CatalogoService)
+            if (entidad.ObjetoImp != "01" && entidad.ObjetoImp != "02")
+                throw new TaskCanceledException("El objeto del impuesto debe ser 01 o 02");
 
             entidad.Descuento ??= 0;
             if (entidad.Descuento < 0 || entidad.Descuento > 100)
@@ -179,6 +182,15 @@ namespace SistemaVenta.BLL.Implementacion
                 throw new TaskCanceledException("Seleccione el impuesto");
             if (entidad.TasaImpuesto == null || entidad.TasaImpuesto < 0 || entidad.TasaImpuesto > 100)
                 throw new TaskCanceledException("La tasa del impuesto debe estar entre 0 y 100 %");
+            if (entidad.ClaveImpuesto != "002" && entidad.ClaveImpuesto != "003")
+                throw new TaskCanceledException("El impuesto debe ser IVA o IEPS");
+            // El SAT solo acepta estas tasas de IVA. La venta guarda su propia copia, asi que una tasa
+            // equivocada dejaria esa venta sin poder facturarse aunque despues se corrija el producto.
+            if (entidad.ClaveImpuesto == "002" && entidad.TasaImpuesto != 0 && entidad.TasaImpuesto != 8 && entidad.TasaImpuesto != 16)
+                throw new TaskCanceledException("La tasa de IVA debe ser 0, 8 o 16 %");
+            // Con 100 % de descuento la base del impuesto seria 0 y el SAT la rechaza
+            if (entidad.Descuento == 100)
+                throw new TaskCanceledException("Un producto con impuesto no puede tener 100 % de descuento");
         }
     }
 }

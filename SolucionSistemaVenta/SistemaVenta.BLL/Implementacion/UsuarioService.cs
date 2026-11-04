@@ -11,18 +11,21 @@ namespace SistemaVenta.BLL.Implementacion
         private static readonly HttpClient _http = new HttpClient();
 
         private readonly IGenericRepository<Usuario> _repositorio;
+        private readonly IGenericRepository<Venta> _repositorioVenta;
         private readonly IArchivoService _archivoService;
         private readonly IUtilidadesService _utilidadesService;
         private readonly ICorreoService _correoService;
 
         public UsuarioService(
             IGenericRepository<Usuario> repositorio,
+            IGenericRepository<Venta> repositorioVenta,
             IArchivoService archivoService,
             IUtilidadesService utilidadesService,
             ICorreoService correoService
             )
         {
             _repositorio = repositorio;
+            _repositorioVenta = repositorioVenta;
             _archivoService = archivoService;
             _utilidadesService = utilidadesService;
             _correoService = correoService;
@@ -144,6 +147,10 @@ namespace SistemaVenta.BLL.Implementacion
                 if (usuario_encontrado == null)
                     throw new TaskCanceledException("El usuario no existe");
 
+                // Cada venta guarda quien la registro: la llave foranea no dejaria borrarlo
+                if (await _repositorioVenta.Obtener(v => v.IdUsuario == IdUsuario) != null)
+                    throw new TaskCanceledException("No se puede eliminar: el usuario tiene ventas registradas");
+
                 string nombreFoto = usuario_encontrado.NombreFoto;
                 bool respuesta = await _repositorio.Eliminar(usuario_encontrado);
 
@@ -163,7 +170,7 @@ namespace SistemaVenta.BLL.Implementacion
             string clave_encriptada = _utilidadesService.ConvertirSha256(clave);
 
             Usuario usuario_encontrado = await _repositorio.Obtener(u => u.Correo.Equals(correo)
-            && u.Clave.Equals(clave_encriptada));
+            && u.Clave.Equals(clave_encriptada) && u.EsActivo == true);
 
             return usuario_encontrado;
         }

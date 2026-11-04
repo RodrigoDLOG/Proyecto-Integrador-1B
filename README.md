@@ -36,3 +36,8 @@ de `Fime/Form1.cs` del material del profesor si ese archivo no existe.
 
 El certificado HTTPS de `ws.urbansa.com` venció el 19-ene-2026. Con
 `AceptarCertificadoVencido: false` el sistema no se conecta y guarda el motivo en la factura.
+Hoy esta en `true`: no es produccion, y solo se perdona la fecha vencida.
+
+El servicio no acepta repetir `idLocal` (matricula + numero de venta + intento). Si se reinicia la
+base con `02`, los numeros de venta vuelven a empezar y sus intentos ya gastados se rechazan: hay que
+reintentar hasta pasar esos numeros o cambiar `PrefijoIdLocal`.

@@ -72,6 +72,10 @@ $("#btnBuscar").click(function () {
         })
         .then(responseJson => {
 
+            // La tabla se vuelve a armar en cada busqueda con los controles estandar (diapositiva 15)
+            if ($.fn.DataTable.isDataTable("#tbventa"))
+                $("#tbventa").DataTable().destroy()
+
             $("#tbventa tbody").html("");
 
             if (responseJson.length > 0) {
@@ -89,7 +93,8 @@ $("#btnBuscar").click(function () {
                             $("<td>").append(
                                 $("<button>").addClass("btn btn-info btn-sm").append(
                                     $("<i>").addClass("fas fa-eye")
-                                ).data("venta", venta)
+                                ).data("venta", venta),
+                                botonSolicitarFactura(venta)
                             )
                         )
                     )
@@ -98,6 +103,28 @@ $("#btnBuscar").click(function () {
 
             }
 
+            $("#tbventa").DataTable({
+                order: [[1, "desc"]],
+                columnDefs: [{ orderable: false, targets: 6 }],
+                dom: "Bfrtip",
+                buttons: [
+                    {
+                        text: 'Exportar Excel',
+                        extend: 'excelHtml5',
+                        title: '',
+                        filename: 'Historial Ventas',
+                        exportOptions: { columns: [0, 1, 2, 3, 4, 5] }
+                    }, 'pageLength'
+                ],
+                language: {
+                    url: "https://cdn.datatables.net/plug-ins/1.11.5/i18n/es-ES.json"
+                },
+            });
+
+        })
+        .catch(() => {
+            $(".card-body").find("div.row").LoadingOverlay("hide");
+            toastr.error("", "No se pudo consultar el historial")
         })
 
 })
@@ -160,7 +187,7 @@ function precargarUltimos30Dias() {
 
 // ______________________ Version Mexico: Solicitar Factura (diapositivas 28 y 29) ______________________
 
-let facturaActual = null    // la factura guardada de la venta abierta, o los datos que sugiere el servidor
+let facturaActual = null    // lo que sugiere el servidor para la venta que se va a facturar
 
 function llenarCatalogo(idCombo, url) {
     fetch(url)
@@ -179,10 +206,17 @@ $(document).ready(function () {
     llenarCatalogo("#cboMetodoPago", "/Catalogo/MetodosPago")
 })
 
-// Al abrir el detalle de una venta se consulta si ya tiene factura
+// En cada renglon. Deshabilitado si ya se facturo, o si la venta es de antes de la Version Mexico
+function botonSolicitarFactura(venta) {
+    const sinCliente = !venta.idCliente
+    return $("<button>").addClass("btn btn-warning btn-sm btn-factura ml-1").text("Solicitar Factura")
+        .prop("disabled", !!venta.uuid || sinCliente)
+        .attr("title", venta.uuid ? `Facturada. UUID: ${venta.uuid}` : sinCliente ? "Venta anterior a la Version Mexico: no tiene cliente con RFC" : "")
+        .data("venta", venta)
+}
+
+// Al abrir el detalle de una venta se muestra el estado de su factura y sus descargas
 $("#modalData").on("show.bs.modal", function () {
-    facturaActual = null
-    $("#btnSolicitarFactura").removeClass("d-none").prop("disabled", true)
     $("#linkFacturaXml, #linkFacturaPdf").addClass("d-none")
     $("#txtEstadoFactura").removeClass("text-danger text-success").text("")
 
@@ -191,45 +225,51 @@ $("#modalData").on("show.bs.modal", function () {
     fetch(`/Venta/ObtenerFactura?numeroVenta=${numeroVenta}`)
         .then(response => response.ok ? response.json() : Promise.reject(response))
         .then(responseJson => {
+            // Se cerro y se abrio otra venta antes de que llegara la respuesta
+            if ($("#txtNumVenta").val() !== numeroVenta) return
+
             if (!responseJson.estado) {
-                // Por ejemplo, una venta de antes de la Version Mexico (sin cliente con RFC)
                 $("#txtEstadoFactura").text(responseJson.mensaje)
                 return
             }
 
-            facturaActual = responseJson.objeto
-
-            if (facturaActual.uuid) {
-                $("#btnSolicitarFactura").addClass("d-none")
+            const factura = responseJson.objeto
+            if (factura.uuid) {
                 $("#linkFacturaXml").attr("href", `/Venta/DescargarFacturaXml?numeroVenta=${numeroVenta}`).removeClass("d-none")
                 $("#linkFacturaPdf").attr("href", `/Venta/MostrarFacturaPdf?numeroVenta=${numeroVenta}`).removeClass("d-none")
-                $("#txtEstadoFactura").addClass("text-success").text(`Facturada. UUID: ${facturaActual.uuid}`)
-            } else {
-                $("#btnSolicitarFactura").prop("disabled", false)
-                if (facturaActual.mensajeError)
-                    $("#txtEstadoFactura").addClass("text-danger").text(`Ultimo intento: ${facturaActual.mensajeError}`)
+                $("#txtEstadoFactura").addClass("text-success").text(`Facturada. UUID: ${factura.uuid}`)
+            } else if (factura.mensajeError) {
+                $("#txtEstadoFactura").addClass("text-danger").text(`Ultimo intento: ${factura.mensajeError}`)
             }
         })
+        .catch(() => $("#txtEstadoFactura").addClass("text-danger").text("No se pudo consultar la factura"))
 })
 
-// Se cierra el detalle y se abre la ventana con los 6 datos (Bootstrap no apila dos ventanas)
-$("#btnSolicitarFactura").click(function () {
-    $("#txtFacturaNumVenta").text(facturaActual.numeroVenta)
-    $("#txtFacturaCliente").text(`${$("#txtDocumentoCliente").val()} - ${$("#txtNombreCliente").val()}`)
-    $("#cboUsoCfdi").val(facturaActual.usoCfdi)
-    $("#cboRegimenFiscal").val(facturaActual.regimenFiscalReceptor)
-    $("#cboFormaPago").val(facturaActual.formaPago)
-    $("#cboTipoComprobante").val(facturaActual.tipoComprobante)
-    $("#cboMetodoPago").val(facturaActual.metodoPago)
-    $("#txtFacturaCodigoPostal").val(facturaActual.codigoPostal)
+// Abre la ventana con los 6 datos, ya llenos con lo que sugiere el servidor
+$("#tbventa tbody").on("click", ".btn-factura", function () {
+    const venta = $(this).data("venta")
 
-    $("#modalData").one("hidden.bs.modal", () => $("#modalFactura").modal("show"))
-    $("#modalData").modal("hide")
-})
+    fetch(`/Venta/ObtenerFactura?numeroVenta=${venta.numeroVenta}`)
+        .then(response => response.ok ? response.json() : Promise.reject(response))
+        .then(responseJson => {
+            if (!responseJson.estado) {
+                swal("Lo sentimos!", responseJson.mensaje, "error")
+                return
+            }
 
-// Al cerrar la ventana de factura se regresa al detalle, que vuelve a consultar su estado
-$("#modalFactura").on("hidden.bs.modal", function () {
-    $("#modalData").modal("show")
+            facturaActual = responseJson.objeto
+            $("#txtFacturaNumVenta").text(venta.numeroVenta)
+            $("#txtFacturaCliente").text(`${venta.documentoCliente} - ${venta.nombreCliente}`)
+            $("#txtFacturaError").text(facturaActual.mensajeError ? `Ultimo intento: ${facturaActual.mensajeError}` : "")
+            $("#cboUsoCfdi").val(facturaActual.usoCfdi)
+            $("#cboRegimenFiscal").val(facturaActual.regimenFiscalReceptor)
+            $("#cboFormaPago").val(facturaActual.formaPago)
+            $("#cboTipoComprobante").val(facturaActual.tipoComprobante)
+            $("#cboMetodoPago").val(facturaActual.metodoPago)
+            $("#txtFacturaCodigoPostal").val(facturaActual.codigoPostal)
+            $("#modalFactura").modal("show")
+        })
+        .catch(() => swal("Lo sentimos!", "No se pudo comunicar con el servidor", "error"))
 })
 
 $("#btnTimbrar").click(function () {
@@ -265,8 +305,10 @@ $("#btnTimbrar").click(function () {
             if (responseJson.estado) {
                 $("#modalFactura").modal("hide")
                 swal("Factura timbrada!", `UUID: ${responseJson.objeto.uuid}`, "success")
+                $("#btnBuscar").click()     // para que su boton salga ya deshabilitado
             } else {
                 swal("No se pudo facturar", responseJson.mensaje || "Intente de nuevo", "error")
+                $("#txtFacturaError").text(responseJson.mensaje ? `Ultimo intento: ${responseJson.mensaje}` : "")
             }
         })
         .catch(() => {

@@ -8,6 +8,9 @@ namespace SistemaVenta.BLL.Interfaces
         // La factura ya guardada de la venta, o los datos sugeridos para la ventana si aun no tiene
         Task<Factura> ObtenerPorVenta(string numeroVenta);
 
+        // De estas ventas, las ya timbradas con su UUID (para deshabilitar el boton en el listado)
+        Task<Dictionary<int, string>> Timbradas(List<int> idsVenta);
+
         // Arma el XML, lo manda timbrar y guarda el resultado (UUID, XML y PDF, o el motivo del error)
         Task<Factura> Solicitar(string numeroVenta, Factura datos);
     }

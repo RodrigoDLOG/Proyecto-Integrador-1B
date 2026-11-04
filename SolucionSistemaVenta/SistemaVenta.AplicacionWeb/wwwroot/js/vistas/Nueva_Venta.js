@@ -121,7 +121,7 @@ function ponerCliente(cliente) {
 }
 
 function cargarClientePorRfc(rfc) {
-    fetch(`/Cliente/ObtenerPorRfc?rfc=${encodeURIComponent(rfc)}`)
+    return fetch(`/Cliente/ObtenerPorRfc?rfc=${encodeURIComponent(rfc)}`)
         .then(response => {
             return response.ok ? response.json() : Promise.reject(response);
         })
@@ -131,7 +131,7 @@ function cargarClientePorRfc(rfc) {
             } else {
                 toastr.warning("", responseJson.mensaje)
                 if (rfc != RFC_PUBLICO_GENERAL)
-                    cargarClientePorRfc(RFC_PUBLICO_GENERAL)
+                    return cargarClientePorRfc(RFC_PUBLICO_GENERAL)
             }
         })
 }
@@ -140,9 +140,10 @@ function cargarClientePorRfc(rfc) {
 $("#txtRfcCliente").on("keydown", function (e) {
     if (e.key == "Enter") $(this).blur()
 })
+let busquedaCliente = Promise.resolve();
 $("#txtRfcCliente").on("change", function () {
     const rfc = $(this).val().trim().toUpperCase()
-    cargarClientePorRfc(rfc == "" ? RFC_PUBLICO_GENERAL : rfc)
+    busquedaCliente = cargarClientePorRfc(rfc == "" ? RFC_PUBLICO_GENERAL : rfc)
 })
 
 // Busqueda: ventana con todos los clientes activos para elegir uno
@@ -170,7 +171,7 @@ function mostrarClientes() {
     $("#tbClientes tbody").html("")
 
     ClientesActivos
-        .filter(c => c.rfc.includes(filtro) || sinAcentos(c.nombre).includes(filtro))
+        .filter(c => sinAcentos(c.rfc).includes(filtro) || sinAcentos(c.nombre).includes(filtro))
         .forEach((cliente) => {
             $("#tbClientes tbody").append(
                 $("<tr>").append(
@@ -222,9 +223,10 @@ $("#cboBuscarProducto").on("select2:select", function (e) {
                 toastr.warning("", "Necesita ingresar la cantidad")
                 return false;
             }
-            const cantidad = parseInt(valor)
-            if (isNaN(cantidad) || cantidad <= 0) {
-                toastr.warning("", "Debe ingresar un numero mayor a 0")
+            // Solo enteros: "1.5" o "2abc" no deben venderse como 1 o 2 sin avisar
+            const cantidad = /^\d+$/.test(valor.trim()) ? parseInt(valor) : 0
+            if (cantidad <= 0) {
+                toastr.warning("", "Debe ingresar un numero entero mayor a 0")
                 return false;
             }
             if (cantidad > data.stock) {
@@ -270,6 +272,11 @@ function calcularProducto(item) {
     item.total = (subTotalC + impuestoC) / 100
 }
 
+// $5,000.00 (diapositiva 27)
+function moneda(valor) {
+    return SimboloMoneda + valor.toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
 function mostrarProducto_Precios() {
 
     let descuento = 0;
@@ -295,11 +302,11 @@ function mostrarProducto_Precios() {
                 ),
                 $("<td>").text(item.descripcionProducto),
                 $("<td>").addClass("text-right").text(item.cantidad),
-                $("<td>").addClass("text-right").text(item.precio.toFixed(2)),
-                $("<td>").addClass("text-right").text(`${item.descuento.toFixed(2)} (${item.porcentajeDescuento}%)`),
-                $("<td>").addClass("text-right").text(item.subTotal.toFixed(2)),
-                $("<td>").addClass("text-right").text(`${item.impuesto.toFixed(2)} (${item.tasaImpuesto}%)`),
-                $("<td>").addClass("text-right").text(item.total.toFixed(2))
+                $("<td>").addClass("text-right").text(moneda(item.precio)),
+                $("<td>").addClass("text-right").text(`${moneda(item.descuento)} (${item.porcentajeDescuento}%)`),
+                $("<td>").addClass("text-right").text(moneda(item.subTotal)),
+                $("<td>").addClass("text-right").text(`${moneda(item.impuesto)} (${item.tasaImpuesto}%)`),
+                $("<td>").addClass("text-right").text(moneda(item.total))
             )
         )
     })
@@ -321,12 +328,15 @@ $(document).on("click", "button.btn-eliminar", function () {
 })
 
 
-$("#btnTerminarVenta").click(function () {
+$("#btnTerminarVenta").click(async function () {
 
     if (ProductosParaVenta.length < 1) {
         toastr.warning("", "Debe ingresar productos")
         return;
     }
+
+    // Si se acaba de escribir un RFC, primero se espera a que termine de buscarlo
+    await busquedaCliente
 
     // Solo se manda que se vende y a quien; el servidor calcula precios, descuentos e impuestos
     const venta = {
@@ -355,7 +365,7 @@ $("#btnTerminarVenta").click(function () {
                 cargarClientePorRfc(RFC_PUBLICO_GENERAL)
                 $("#cboTipoDocumentoVenta").val($("#cboTipoDocumentoVenta option:first").val())
 
-                swal("Registrado!", `Numero Venta : ${responseJson.objeto.numeroVenta}\nTotal : ${SimboloMoneda} ${responseJson.objeto.total}`, "success")
+                swal("Registrado!", `Numero Venta : ${responseJson.objeto.numeroVenta}\nCliente : ${responseJson.objeto.nombreCliente}\nTotal : ${SimboloMoneda} ${responseJson.objeto.total}`, "success")
             } else {
                 swal("Lo sentimos!", responseJson.mensaje || "No se pudo registrar la venta", "error")
             }

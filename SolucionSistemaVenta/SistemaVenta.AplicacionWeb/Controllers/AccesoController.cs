@@ -40,6 +40,11 @@ namespace SistemaVenta.AplicacionWeb.Controllers
         [HttpPost]
         public async Task<IActionResult> Login(VMUsuarioLogin modelo)
         {
+            // Sin contrasena no hay nada que cifrar: se avisa aqui en lugar de llamar al servicio
+            if (string.IsNullOrWhiteSpace(modelo.Correo) || string.IsNullOrWhiteSpace(modelo.Clave)) {
+                ViewData["Mensaje"] = "Debe ingresar el correo y la contraseña";
+                return View();
+            }
 
             Usuario usuario_encontrado = await _usuarioServicio.ObtenerPorCredenciales(modelo.Correo, modelo.Clave);
 

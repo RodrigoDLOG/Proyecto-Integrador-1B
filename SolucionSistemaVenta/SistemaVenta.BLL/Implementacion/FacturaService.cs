@@ -31,6 +31,10 @@ namespace SistemaVenta.BLL.Implementacion
         private static readonly XNamespace Soap = "http://schemas.xmlsoap.org/soap/envelope/";
         private static readonly XNamespace Ws = "http://ws.urbansa.com/";
 
+        // Evita que dos solicitudes simultaneas timbren la misma venta.
+        // ponytail: un candado para todas las ventas; basta con un solo servidor y pocas facturas.
+        private static readonly SemaphoreSlim Candado = new SemaphoreSlim(1, 1);
+
         private readonly IGenericRepository<Factura> _repositorio;
         private readonly IGenericRepository<Venta> _repositorioVenta;
         private readonly IGenericRepository<Cliente> _repositorioCliente;
@@ -80,7 +84,27 @@ namespace SistemaVenta.BLL.Implementacion
             };
         }
 
+        public async Task<Dictionary<int, string>> Timbradas(List<int> idsVenta)
+        {
+            // Solo idVenta y uuid: traer la factura completa cargaria el XML y el PDF de cada una
+            IQueryable<Factura> query = await _repositorio.Consultar(f => idsVenta.Contains(f.IdVenta) && f.Uuid != null);
+            return query.Select(f => new { f.IdVenta, f.Uuid }).ToDictionary(f => f.IdVenta, f => f.Uuid!);
+        }
+
         public async Task<Factura> Solicitar(string numeroVenta, Factura datos)
+        {
+            await Candado.WaitAsync();
+            try
+            {
+                return await TimbrarVenta(numeroVenta, datos);
+            }
+            finally
+            {
+                Candado.Release();
+            }
+        }
+
+        private async Task<Factura> TimbrarVenta(string numeroVenta, Factura datos)
         {
             Venta venta = await ObtenerVenta(numeroVenta);
 
@@ -109,6 +133,12 @@ namespace SistemaVenta.BLL.Implementacion
             string idLocal = $"{_configuracion.PrefijoIdLocal}{venta.NumeroVenta}{factura.Intentos:00}";
             string xml = CfdiXml.Construir(venta, cliente, negocio, factura, idLocal);
 
+            // Se guarda antes de llamar al servicio: ese numero de intento ya queda gastado pase lo que pase
+            if (factura.IdFactura == 0)
+                await _repositorio.Crear(factura);
+            else
+                await _repositorio.Editar(factura);
+
             try
             {
                 byte[] zip = await Timbrar(xml);
@@ -121,10 +151,14 @@ namespace SistemaVenta.BLL.Implementacion
                 factura.MensajeError = ex.Message.Length > 500 ? ex.Message[..500] : ex.Message;
             }
 
-            if (factura.IdFactura == 0)
-                await _repositorio.Crear(factura);
-            else
+            try
+            {
                 await _repositorio.Editar(factura);
+            }
+            catch (Exception ex) when (factura.Uuid != null)
+            {
+                throw new TaskCanceledException($"La factura se timbro (UUID {factura.Uuid}) pero no se pudo guardar: {ex.Message}");
+            }
 
             return factura;
         }
@@ -172,6 +206,8 @@ namespace SistemaVenta.BLL.Implementacion
             // PPD = se paga despues, asi que todavia no se sabe la forma: el SAT pide 99 Por definir
             if (datos.MetodoPago == "PPD" && datos.FormaPago != "99")
                 throw new TaskCanceledException("Con metodo de pago PPD la forma de pago debe ser 99 Por definir");
+            if (datos.MetodoPago == "PUE" && datos.FormaPago == "99")
+                throw new TaskCanceledException("Con metodo de pago PUE ya se pago: elija la forma de pago, no 99 Por definir");
         }
 
         // Llamada SOAP a TimbrarF, igual a la que hace el proyecto Fime del profesor (Form1.cs)

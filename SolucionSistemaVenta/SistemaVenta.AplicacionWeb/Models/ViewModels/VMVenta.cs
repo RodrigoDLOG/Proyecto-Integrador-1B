@@ -17,6 +17,8 @@
         // Version Mexico
         public int? IdCliente { get; set; }
         public string? DescuentoTotal { get; set; }
+        // UUID de la factura, si ya se timbro
+        public string? Uuid { get; set; }
         public virtual ICollection<VMDetalleVenta> DetalleVenta { get; set; }
     }
 }

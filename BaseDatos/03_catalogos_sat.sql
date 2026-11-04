@@ -4,16 +4,16 @@
 USE DBVENTA;
 GO
 
---________________________________ c_RegimenFiscal_SAT (19) ________________________________
-IF OBJECT_ID('c_RegimenFiscal_SAT') IS NULL
-CREATE TABLE c_RegimenFiscal_SAT (
+--________________________________ c_RegimenFiscal (19) ________________________________
+IF OBJECT_ID('c_RegimenFiscal') IS NULL
+CREATE TABLE c_RegimenFiscal (
     c_RegimenFiscal          VARCHAR(3) NOT NULL PRIMARY KEY,
     descripcion              NVARCHAR(150),
     fisica                   NVARCHAR(2),
     moral                    NVARCHAR(2)
 );
 GO
-INSERT INTO c_RegimenFiscal_SAT (c_RegimenFiscal, descripcion, fisica, moral)
+INSERT INTO c_RegimenFiscal (c_RegimenFiscal, descripcion, fisica, moral)
 SELECT v.* FROM (VALUES
 (N'601', N'General de Ley Personas Morales', N'No', N'Sí'),
 (N'603', N'Personas Morales con Fines no Lucrativos', N'No', N'Sí'),
@@ -35,7 +35,7 @@ SELECT v.* FROM (VALUES
 (N'625', N'Régimen de las Actividades Empresariales con ingresos a través de Plataformas Tecnológicas', N'Sí', N'No'),
 (N'626', N'Régimen Simplificado de Confianza', N'Sí', N'Sí')
 ) AS v(c_RegimenFiscal, descripcion, fisica, moral)
-WHERE NOT EXISTS (SELECT 1 FROM c_RegimenFiscal_SAT t WHERE t.c_RegimenFiscal = v.c_RegimenFiscal);
+WHERE NOT EXISTS (SELECT 1 FROM c_RegimenFiscal t WHERE t.c_RegimenFiscal = v.c_RegimenFiscal);
 GO
 
 --________________________________ c_UsoCFDI (24) ________________________________

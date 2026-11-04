@@ -131,6 +131,9 @@ namespace SistemaVenta.BLL.Implementacion
                 throw new TaskCanceledException("Debe capturar el nombre o razon social");
 
             entidad.Rfc = ValidacionesSat.ValidarRfc(entidad.Rfc);
+            // El SAT le pide a un extranjero residencia fiscal y registro tributario: aqui no se capturan
+            if (entidad.Rfc == "XEXX010101000")
+                throw new TaskCanceledException("Este sistema no maneja clientes extranjeros (XEXX010101000)");
             entidad.DomicilioFiscalReceptor = ValidacionesSat.ValidarCodigoPostal(entidad.DomicilioFiscalReceptor);
 
             CRegimenFiscalSat regimen = await _repositorioRegimen.Obtener(r => r.CRegimenFiscal == entidad.RegimenFiscalReceptor);

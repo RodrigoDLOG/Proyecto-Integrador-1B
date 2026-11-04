@@ -8,6 +8,8 @@ public partial class CMedidaLocal
 {
     public int IdMedidaLocal { get; set; }
 
+    public string? ClaveMedida { get; set; }
+
     public string? Descripcion { get; set; }
 
     public bool? EsActivo { get; set; }
