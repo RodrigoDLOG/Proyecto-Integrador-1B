@@ -45,6 +45,7 @@ namespace SistemaVenta.IOC
             ConfiguracionTimbrado timbrado = new ConfiguracionTimbrado
             {
                 Url = configuration["Timbrado:Url"] ?? "",
+                EspacioNombres = configuration["Timbrado:EspacioNombres"] ?? "",
                 Usuario = configuration["Timbrado:Usuario"] ?? "",
                 Password = configuration["Timbrado:Password"] ?? "",
                 PrefijoIdLocal = configuration["Timbrado:PrefijoIdLocal"] ?? "",

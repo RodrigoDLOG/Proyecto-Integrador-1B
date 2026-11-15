@@ -15,6 +15,8 @@ namespace SistemaVenta.BLL.Implementacion
     public class ConfiguracionTimbrado
     {
         public string Url { get; set; } = "";
+        // Espacio de nombres del servicio, tal como viene en su WSDL (targetNamespace)
+        public string EspacioNombres { get; set; } = "";
         public string Usuario { get; set; } = "";
         public string Password { get; set; } = "";
         // Va antes del numero de venta en <idLocal>. Todo el grupo usa la misma cuenta FIME,
@@ -29,7 +31,6 @@ namespace SistemaVenta.BLL.Implementacion
     public class FacturaService : IFacturaService
     {
         private static readonly XNamespace Soap = "http://schemas.xmlsoap.org/soap/envelope/";
-        private static readonly XNamespace Ws = "http://ws.urbansa.com/";
 
         // Evita que dos solicitudes simultaneas timbren la misma venta.
         // ponytail: un candado para todas las ventas; basta con un solo servidor y pocas facturas.
@@ -213,6 +214,7 @@ namespace SistemaVenta.BLL.Implementacion
         // Llamada SOAP a TimbrarF, igual a la que hace el proyecto Fime del profesor (Form1.cs)
         private async Task<byte[]> Timbrar(string xml)
         {
+            XNamespace Ws = _configuracion.EspacioNombres;
             string sobre = new XElement(Soap + "Envelope",
                 new XAttribute(XNamespace.Xmlns + "soap", Soap),
                 new XElement(Soap + "Body",
@@ -223,7 +225,7 @@ namespace SistemaVenta.BLL.Implementacion
             ).ToString(SaveOptions.DisableFormatting);
 
             using HttpRequestMessage solicitud = new HttpRequestMessage(HttpMethod.Post, _configuracion.Url);
-            solicitud.Headers.Add("SOAPAction", "\"http://ws.urbansa.com/TimbrarF\"");
+            solicitud.Headers.Add("SOAPAction", $"\"{Ws}TimbrarF\"");
             solicitud.Content = new StringContent(sobre, Encoding.UTF8, "text/xml");
 
             HttpResponseMessage respuesta;
@@ -236,7 +238,16 @@ namespace SistemaVenta.BLL.Implementacion
                 throw new TaskCanceledException("No se pudo conectar con el servicio de timbrado: " + (ex.InnerException?.Message ?? ex.Message));
             }
 
-            XDocument documento = XDocument.Parse(await respuesta.Content.ReadAsStringAsync());
+            // Si la direccion ya no existe, el servidor contesta con una pagina web, no con XML
+            XDocument documento;
+            try
+            {
+                documento = XDocument.Parse(await respuesta.Content.ReadAsStringAsync());
+            }
+            catch (System.Xml.XmlException)
+            {
+                throw new TaskCanceledException($"El servicio de timbrado respondio {(int)respuesta.StatusCode} sin XML: revise la direccion (Timbrado:Url)");
+            }
 
             string resultado = documento.Descendants(Ws + "TimbrarFResult").FirstOrDefault()?.Value;
             if (!string.IsNullOrEmpty(resultado))
