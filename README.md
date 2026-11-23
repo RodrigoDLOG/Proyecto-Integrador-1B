@@ -38,7 +38,7 @@ Los datos del servicio de timbrado del profesor están en la sección `Timbrado`
 de `Fime/Form1.cs` del material del profesor si ese archivo no existe. Sin ese archivo el servicio
 rechaza la llamada.
 
-`AceptarCertificadoVencido` queda en `false`: el certificado de adon.mx es válido. La opción solo
+`AceptarCertificadoVencido` queda en `false`: el certificado de la ruta oficial (ws.urbansa.com) es válido. La opción solo
 perdona un certificado vencido (le pasó a la ruta original a principios de 2026).
 
 El servicio no acepta repetir `idLocal` (matrícula + número de venta + intento). Si se reinicia la
