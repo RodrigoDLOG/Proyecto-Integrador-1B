@@ -30,13 +30,16 @@ Las imágenes de productos, fotos de usuario y logo del negocio se guardan local
 ## Facturación (timbrado)
 
 Los datos del servicio de timbrado del profesor están en la sección `Timbrado` de
-`appsettings.json`: `https://www.adon.mx/site/timbrado.asmx`, espacio de nombres `http://adon.mx/`.
-La dirección anterior (`ws.urbansa.com`) ya no existe. La contraseña de la cuenta `FIME` va en
+`appsettings.json`: `https://ws.urbansa.com/site/timbrado.asmx`, espacio de nombres
+`http://ws.urbansa.com/` (los dos salen del WSDL del servicio). Es la ruta que dio el profesor el
+22-nov-2026; la original (`/app/timbrado.asmx`) ya no existe. `https://www.adon.mx/site/timbrado.asmx`
+(espacio de nombres `http://adon.mx/`) es el mismo servicio con otro nombre. La contraseña de la cuenta `FIME` va en
 `SistemaVenta.AplicacionWeb/appsettings.Development.json`, que no se sube a git: copiarla
-de `Fime/Form1.cs` del material del profesor si ese archivo no existe.
+de `Fime/Form1.cs` del material del profesor si ese archivo no existe. Sin ese archivo el servicio
+rechaza la llamada.
 
 `AceptarCertificadoVencido` queda en `false`: el certificado de adon.mx es válido. La opción solo
-perdona un certificado vencido (le pasó a ws.urbansa.com en 2026).
+perdona un certificado vencido (le pasó a la ruta original a principios de 2026).
 
 El servicio no acepta repetir `idLocal` (matrícula + número de venta + intento). Si se reinicia la
 base con `02`, los números de venta vuelven a empezar y sus intentos ya gastados se rechazan: hay que
