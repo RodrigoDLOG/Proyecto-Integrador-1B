@@ -120,6 +120,10 @@ namespace SistemaVenta.BLL.Implementacion
             datos.TipoComprobante = "I"; // una venta siempre es Ingreso
             await Validar(datos, cliente);
 
+            // Sin contrasena el servicio rechaza la llamada; se avisa antes de gastar un intento
+            if (string.IsNullOrEmpty(_configuracion.Password))
+                throw new TaskCanceledException("Falta la contrasena del servicio de timbrado: va en appsettings.Development.json (ver README)");
+
             factura ??= new Factura { IdVenta = venta.IdVenta, FechaRegistro = DateTime.Now };
             factura.UsoCfdi = datos.UsoCfdi;
             factura.RegimenFiscalReceptor = datos.RegimenFiscalReceptor;
